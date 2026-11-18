@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e40d8">
+<title>رحلة الإنجليزية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1e40d8;--blue-d:#1632a8;--blue-l:#e6ebff;--bg:#f4f1ea;--card:#fff;--text:#161a2b;--muted:#6f7488;
+  --line:#e7e3d9;--ok:#16a34a;--bad:#dc2626;--orange:#ff6a3d;--shadow:0 6px 22px rgba(22,26,43,.07);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Tajawal","Segoe UI",Tahoma,system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+.pathwrap{overflow:hidden;padding:0 8px}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding:14px 16px 110px}
+h1{font-size:1.55rem;margin:.1em 0;font-weight:800}
+h2{font-size:1.2rem;margin:.2em 0;font-weight:800}
+h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
+.muted{color:var(--muted)}.small{font-size:.85rem}.center{text-align:center}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;color:var(--blue);font-weight:800;direction:ltr;text-align:right}
+
+/* top */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.hello small{display:block;color:var(--muted);font-size:.85rem}
+.hello b{font-size:1.5rem;font-weight:800}
+.chips{display:flex;gap:8px}
+.chip{background:rgba(255,255,255,.75);border-radius:99px;padding:6px 14px;font-weight:800;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow)}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--blue);display:inline-block}
+
+/* hero */
+.hero{background:var(--blue);color:#fff;border-radius:26px;padding:16px;margin-bottom:18px}
+.hero-top{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.hero-top .mascot{flex:none}
+.hero-top .ht small{opacity:.8;font-size:.78rem;letter-spacing:.06em;display:block;direction:ltr;text-align:right}
+.hero-top .ht b{font-size:1.45rem;line-height:1.25;display:block}
+.hero-top .ht span{opacity:.85;font-size:.9rem;direction:ltr;display:block;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px}
+.dots{display:grid;grid-template-columns:repeat(15,1fr);gap:7px;margin-bottom:14px}
+.dots i{aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.25)}
+.dots i.on{background:#fff}.dots i.now{background:var(--orange)}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.hero-row .t b{font-size:1.1rem;display:block;line-height:1.2}
+.hero-row .t span{opacity:.85;font-size:.85rem}
+.cta{background:#f6f3ea;color:var(--blue);border:0;border-radius:99px;padding:13px 20px;font-weight:800;font-size:1rem;cursor:pointer;white-space:nowrap}
+
+/* sections & cards */
+.sec{display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px}
+.sec a,.sec button{color:var(--blue);font-weight:700;font-size:.9rem;background:none;border:0;cursor:pointer}
+.card{background:var(--card);border-radius:22px;padding:14px;box-shadow:var(--shadow);margin:10px 0}
+.week{display:flex;justify-content:space-between;gap:4px;background:rgba(255,255,255,.6);border-radius:22px;padding:14px 10px}
+.wd{flex:1;text-align:center;font-size:.72rem;color:var(--muted)}
+.wd .c{width:34px;height:34px;border-radius:50%;margin:0 auto 6px;background:#e9e5da;display:grid;place-items:center;color:#fff;font-weight:800}
+.wd.done .c{background:var(--blue)}
+.wd.today .c{border:2.5px solid var(--text);background:#f1eee5;color:var(--text)}
+.wd.today.done .c{background:var(--blue);border-color:var(--blue);color:#fff}
+.prog{display:flex;gap:14px;align-items:center;cursor:pointer}
+.badge{width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#2d4ff0,var(--blue-d));color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.25rem;flex:none}
+.prog.locked{opacity:.55}.prog.locked .badge{background:#9aa3c9}
+.prog .info{flex:1;min-width:0}.prog .info .s{color:var(--muted);font-size:.82rem}
+.bar{height:8px;background:#ece8dd;border-radius:99px;overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .4s}
+.tag{font-size:.75rem;padding:2px 10px;border-radius:99px;background:var(--blue-l);color:var(--blue);font-weight:700;white-space:nowrap}
+.tag.ok{background:#dcfce7;color:#166534}.tag.soon{background:#eceaf6;color:#5b5a78}
+.wod{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.wod b{direction:ltr;display:block;font-size:1.3rem;text-align:right}
+.spk{background:var(--blue-l);border:0;border-radius:50%;width:44px;height:44px;font-size:1.1rem;cursor:pointer;flex:none}
+.spk.sm{width:34px;height:34px;font-size:.9rem}
+.soon-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.soon{background:rgba(255,255,255,.6);border-radius:20px;padding:14px;min-height:120px}
+.soon .ic{width:40px;height:40px;border-radius:12px;background:var(--blue-l);display:grid;place-items:center;font-size:1.2rem;margin-bottom:8px}
+
+/* buttons */
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:14px;background:var(--blue);color:#fff;font-weight:800;font-size:1rem;cursor:pointer;text-align:center;margin-top:10px}
+.btn.ok{background:var(--ok)}.btn.ghost{background:transparent;color:var(--blue);border:2px solid var(--blue)}
+.btn:disabled{background:#b4bdf0;color:#fff;cursor:default}
+.back{display:inline-flex;gap:6px;color:var(--blue);font-weight:700;margin-bottom:8px;cursor:pointer}
+
+/* level header + tabs */
+.lh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.lh .pill{background:rgba(255,255,255,.8);border-radius:99px;padding:6px 16px;font-weight:800;direction:ltr;box-shadow:var(--shadow)}
+.tabs{display:flex;background:rgba(255,255,255,.7);border-radius:99px;padding:4px;margin:12px 0}
+.tab{flex:1;text-align:center;padding:8px 4px;border-radius:99px;font-weight:700;font-size:.92rem;color:var(--muted)}
+.tab.on{background:#fff;color:var(--blue);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+
+/* path */
+.wk{background:var(--card);border-radius:18px;padding:12px 14px;margin:22px 0 4px;box-shadow:var(--shadow)}
+.wk b{display:block}.wk .eyebrow{display:block}
+.pn{display:flex;flex-direction:column;align-items:center;margin:16px 0;position:relative}
+.node{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:1.35rem;font-weight:800;cursor:pointer;border:0}
+.node.locked{background:#e4e0d5;color:#9a9690;cursor:not-allowed}
+.node.done{background:var(--blue);color:#fff}
+.node.open{background:#fff;color:var(--blue);border:3px solid var(--blue)}
+.node.cur{background:none;padding:0;position:relative;width:78px;height:78px;box-shadow:0 0 0 4px #fff,0 0 0 7px var(--blue-l);border-radius:50%}
+.here{position:absolute;top:-38px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:3px 12px;border-radius:10px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.here:after{content:"";position:absolute;bottom:-5px;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:var(--text);border-bottom:0}
+.pl{text-align:center;margin-top:6px;max-width:170px}
+.pl b{display:block;font-size:.85rem}.pl span{font-size:.8rem;color:var(--muted)}
+.final{background:linear-gradient(135deg,#ff6a3d,#ff3d77)}
+
+/* day page */
+.dayhead{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--shadow)}
+.dayhead .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.dayhead .num{font-size:3rem;font-weight:800;color:var(--blue);line-height:1}
+.say{background:var(--blue-l);border-radius:16px;padding:12px 14px;margin-top:12px}
+.say small{color:var(--muted)}
+.say b{display:block;direction:ltr;text-align:left;margin-top:4px}
+.sech{display:flex;align-items:center;gap:8px;margin:22px 0 8px}
+.sech .n{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:800}
+.vid{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:20px;padding:12px;margin:10px 0;box-shadow:var(--shadow)}
+.vid .vt{flex:1;min-width:0}
+.vid .vn{font-weight:700}.vid .vs{color:var(--muted);font-size:.82rem;direction:ltr;text-align:right}.vid .vc{color:var(--muted);font-size:.75rem;direction:ltr;text-align:right}
+.play{width:54px;height:54px;border-radius:16px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:1.3rem;flex:none}
+.vid.seen .play{background:var(--ok)}
+.note{color:var(--muted);font-size:.82rem;margin:4px 2px}
+.sent{background:var(--card);border-radius:18px;padding:12px 14px;margin:8px 0;box-shadow:var(--shadow);cursor:pointer}
+.sent .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sent .en{direction:ltr;text-align:left;font-weight:700;font-size:1.05rem;flex:1}
+.sent .ar{color:var(--blue);margin-top:6px;display:none}
+.sent.show .ar{display:block}
+.words{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.word{background:var(--card);border-radius:18px;padding:40px 10px 14px;text-align:center;cursor:pointer;position:relative;min-height:86px;box-shadow:var(--shadow)}
+.word b{display:block;direction:ltr;font-size:1.02rem}
+.word span{display:block;color:var(--blue);margin-top:6px;visibility:hidden;font-size:.95rem}
+.word.show span{visibility:visible}
+.word .spk{position:absolute;top:6px;left:6px;width:30px;height:30px;font-size:.8rem}
+.dock{position:sticky;bottom:78px;padding:10px 0 4px;z-index:5;background:linear-gradient(rgba(244,241,234,0),var(--bg) 40%)}
+.dock .btn{margin:0;box-shadow:0 8px 24px rgba(30,64,216,.25)}
+
+/* quiz */
+.q{font-size:1.2rem;font-weight:700;margin:10px 0 14px}.q.ltr{direction:ltr;text-align:left}
+.opt{display:block;width:100%;text-align:start;padding:14px;margin:9px 0;border-radius:16px;border:2px solid var(--line);background:#fff;font-size:1rem;cursor:pointer;color:var(--text)}
+.opt:hover:not(:disabled){border-color:var(--blue)}
+.opt.right{border-color:var(--ok);background:#dcfce7;color:#14532d}
+.opt.wrong{border-color:var(--bad);background:#fee2e2;color:#7f1d1d}
+.big{font-size:3.4rem;text-align:center}
+.tip{background:#fff6cf;color:#6b4f00;border-radius:16px;padding:12px 14px;margin:10px 0;font-size:.93rem}
+
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+.nav .in{max-width:480px;margin:0 auto;display:flex;justify-content:space-around;padding:8px 6px}
+.nav a{flex:1;text-align:center;font-size:.76rem;color:var(--muted);font-weight:700;padding:4px}
+.nav a span{display:block;font-size:1.4rem;line-height:1.2}
+.nav a.on{color:var(--blue)}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:11px 20px;border-radius:99px;z-index:20;font-weight:700;max-width:90vw;text-align:center}
+input.txt{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);font-size:1rem;font-family:inherit;background:#fff}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.stat{background:var(--card);border-radius:18px;padding:14px 6px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:1.5rem;color:var(--blue)}.stat span{font-size:.78rem;color:var(--muted)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;margin-top:18px;font-size:.9rem}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.btn.sm{display:inline-block;width:auto;padding:8px 16px;margin:0;font-size:.88rem;border-radius:12px}
+
+/* ---- خريطة المستويات (دوائر) ---- */
+.top2{position:sticky;top:0;z-index:8;margin:-14px -16px 12px;padding:12px 16px;background:rgba(244,241,234,.92);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(0,0,0,.04)}
+.who{display:flex;align-items:center;gap:10px}
+.who small{display:block;color:var(--muted);font-size:.78rem;line-height:1.2}
+.who b{font-size:1.1rem;font-weight:800;line-height:1.2}
+.maphead{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 0}
+.map{position:relative;margin:0 -6px}
+.map svg.links{position:absolute;inset:0;width:100%;height:100%}
+.map svg.links path{fill:none;stroke:#d9d5c9;stroke-width:5;stroke-dasharray:2 11;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.map svg.links path.on{stroke:var(--blue)}
+.lv{position:absolute;transform:translateX(-50%);border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;width:170px;padding:0;color:var(--text)}
+.rw{position:relative;width:108px;height:108px;display:block}
+.rw .ring{position:absolute;inset:0;width:100%;height:100%}
+.trk{fill:none;stroke:#e4e0d5;stroke-width:7}
+.prg{fill:none;stroke:var(--blue);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .6s}
+.core{position:absolute;inset:12px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.6rem;background:linear-gradient(145deg,#3d5fff,#1632a8);box-shadow:0 7px 0 #0f2488;transition:transform .08s,box-shadow .08s}
+.core small{display:block;font-size:.7rem;font-weight:700;opacity:.9;margin-top:-4px}
+.lv:active .core{transform:translateY(5px);box-shadow:0 2px 0 #0f2488}
+.lv.locked .core{background:#dcd8cc;color:#9b968a;box-shadow:0 7px 0 #c5c0b2}
+.lv.locked:active .core{box-shadow:0 2px 0 #c5c0b2}
+.lv.done .core{background:linear-gradient(145deg,#ffd75e,#f4a100);box-shadow:0 7px 0 #c47f00}
+.lv.done:active .core{box-shadow:0 2px 0 #c47f00}
+.lv.done .prg{stroke:#f4a100}
+.lv.cur .core{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.lt{margin-top:12px;text-align:center}
+.lt b{display:block;font-size:1rem}
+.lt small{display:block;color:var(--muted);font-size:.8rem;line-height:1.35;max-width:150px;margin:0 auto}
+.lv .here{top:-34px}
+.crown{position:absolute;top:-10px;right:-4px;font-size:1.3rem;z-index:2;transform:rotate(18deg)}
+.chipk{font-size:.7rem;background:#fff;border-radius:99px;padding:1px 9px;font-weight:800;color:var(--muted);margin-top:4px;display:inline-block}
+.ov{position:fixed;inset:0;background:rgba(10,14,30,.5);z-index:30;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+.sheet{width:100%;max-width:480px;background:#fff;border-radius:28px 28px 0 0;padding:22px 18px calc(26px + env(safe-area-inset-bottom));animation:up .28s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet .grab{width:44px;height:5px;border-radius:9px;background:#ddd;margin:-10px auto 14px}
+.sh-top{display:flex;gap:14px;align-items:center}
+.sh-badge{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.4rem;background:linear-gradient(145deg,#3d5fff,#1632a8);box-shadow:0 5px 0 #0f2488;flex:none}
+.sh-badge.gold{background:linear-gradient(145deg,#ffd75e,#f4a100);box-shadow:0 5px 0 #c47f00}
+.sh-badge.lock{background:#dcd8cc;color:#9b968a;box-shadow:0 5px 0 #c5c0b2}
+.sh-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:16px 0 6px}
+.sh-stats div{background:var(--bg);border-radius:14px;padding:10px 4px;text-align:center}
+.sh-stats b{display:block;font-size:1.15rem;color:var(--blue)}
+.sh-stats span{font-size:.72rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app"><noscript>فعّل JavaScript لتشغيل التطبيق.</noscript></div>
+<nav class="nav"><div class="in">
+  <a href="#/" data-n="home"><span>🏠</span>الرئيسية</a>
+  <a href="#/explore" data-n="explore"><span>🧭</span>استكشف</a>
+  <a href="#/progress" data-n="progress"><span>📊</span>تقدّمي</a>
+  <a href="#/me" data-n="me"><span>👤</span>حسابي</a>
+</div></nav>
+
+<script>
+/* =====================================================================
+   البيانات  — عدّل هنا الكورسات والدروس والأسئلة
+   yt("...") يفتح بحث يوتيوب. استبدله برابط الفيديو/القائمة المباشر متى أردت.
+   ===================================================================== */
+const yt = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+const CHANNEL = "ZAmericanEnglish";
+const DAYS = 30;
+
+/* ---- الأسابيع (برنامج آدم) ---- */
+const WEEKS = [
+ {en:"WHO I AM",   ar:"من أنا",            say:"My name is Adam. I am twenty. I am a student.",                 sayAr:"اسمي آدم. عمري عشرون. أنا طالب."},
+ {en:"MY HOME",    ar:"بيتي وأسرتي",       say:"I live in Rabat. My house has a kitchen and three rooms.",       sayAr:"أسكن في الرباط. في بيتي مطبخ وثلاث غرف."},
+ {en:"MY DAY",     ar:"يومي",              say:"I wake up at seven. I go to the university by bus.",             sayAr:"أستيقظ في السابعة. أذهب إلى الجامعة بالحافلة."},
+ {en:"MY CITY",    ar:"المدينة والتسوق",   say:"I go to the market. I buy oranges and I drink coffee.",          sayAr:"أذهب إلى السوق. أشتري برتقالًا وأشرب القهوة."},
+ {en:"REVIEW",     ar:"مراجعة وتحدث",      say:"Hello, my name is Adam. I want to learn English every day.",     sayAr:"مرحبًا، اسمي آدم. أريد أن أتعلم الإنجليزية كل يوم."}
+];
+const weekIdx = d => Math.min(4, Math.floor((d-1)/7));
+
+/* ---- 30 يومًا من قصة آدم: [العنوان, وصف, جمل[en,ar], كلمات[en,ar]] ---- */
+const ADAM = [
+ ["مرحبا، أنا آدم","الاسم، العمر، المهنة",[["Hello! I am Adam.","مرحبًا! أنا آدم."],["I am twenty years old.","عمري عشرون سنة."],["I am a student.","أنا طالب."],["Nice to meet you!","سعيد بلقائك!"]],[["Hello","مرحبا"],["I am","أنا"],["Name","اسم"],["Student","طالب"],["Nice to meet you","سعيد بلقائك"]]],
+ ["عائلة مغربية","أمي، أبي، أخي وأختي",[["My family is Moroccan.","عائلتي مغربية."],["I live with my mother and my father.","أعيش مع أمي وأبي."],["I have one brother and one sister.","عندي أخ واحد وأخت واحدة."],["I love my family.","أحب عائلتي."]],[["Family","عائلة"],["Mother","أم"],["Father","أب"],["Brother","أخ"],["Sister","أخت"]]],
+ ["من أين أنت؟","الدول والمدن",[["I am from Morocco.","أنا من المغرب."],["I live in Rabat.","أسكن في الرباط."],["Rabat is a big city.","الرباط مدينة كبيرة."],["Where are you from?","من أين أنت؟"]],[["Morocco","المغرب"],["City","مدينة"],["Big","كبير"],["Where","أين"],["From","من"]]],
+ ["كم عمرك؟","الأرقام من 1 إلى 20",[["My brother is twelve.","أخي عمره اثنا عشر."],["My sister is sixteen.","أختي عمرها ستة عشر."],["My father is fifty.","أبي عمره خمسون."],["How old are you?","كم عمرك؟"]],[["One, two, three","واحد، اثنان، ثلاثة"],["Ten","عشرة"],["Twelve","اثنا عشر"],["Twenty","عشرون"],["How old","كم العمر"]]],
+ ["ماذا تعمل؟","المهن",[["My father is a doctor.","أبي طبيب."],["My mother is a teacher.","أمي معلمة."],["I study at the university.","أدرس في الجامعة."],["What do you do?","ماذا تعمل؟"]],[["Doctor","طبيب"],["Teacher","معلم"],["University","جامعة"],["Work","يعمل"],["Study","يدرس"]]],
+ ["كيف حالك؟","المشاعر: سعيد، متعب، جائع",[["I am happy today.","أنا سعيد اليوم."],["My mother is tired.","أمي متعبة."],["I am hungry.","أنا جائع."],["Are you okay?","هل أنت بخير؟"]],[["Happy","سعيد"],["Tired","متعب"],["Hungry","جائع"],["Sad","حزين"],["Okay","بخير"]]],
+ ["قدّم نفسك","مراجعة الأسبوع الأول",[["Hello! My name is Adam.","مرحبًا! اسمي آدم."],["I am twenty and I am a student.","عمري عشرون وأنا طالب."],["I am from Rabat, Morocco.","أنا من الرباط، المغرب."],["I live with my family.","أعيش مع عائلتي."]],[["Introduce","يقدّم"],["Live","يسكن"],["Today","اليوم"],["Meet","يلتقي"],["Country","بلد"]]],
+
+ ["لدى آدم حاسوب","الأشياء التي أملكها",[["I have a computer.","عندي حاسوب."],["I have a phone and a bag.","عندي هاتف وحقيبة."],["My computer is new.","حاسوبي جديد."],["Do you have a phone?","هل عندك هاتف؟"]],[["Computer","حاسوب"],["Phone","هاتف"],["Bag","حقيبة"],["New","جديد"],["Have","يملك"]]],
+ ["أين هاتفي؟","على، تحت، في",[["Where is my phone?","أين هاتفي؟"],["It is on the table.","إنه على الطاولة."],["The bag is under the chair.","الحقيبة تحت الكرسي."],["The keys are in the bag.","المفاتيح في الحقيبة."]],[["On","على"],["Under","تحت"],["In","في"],["Table","طاولة"],["Chair","كرسي"]]],
+ ["الفطور في البيت","الطعام والشراب",[["We have breakfast at home.","نتناول الفطور في البيت."],["I drink tea with mint.","أشرب شايًا بالنعناع."],["I eat bread and eggs.","آكل خبزًا وبيضًا."],["I like tea.","أحب الشاي."]],[["Breakfast","فطور"],["Tea","شاي"],["Bread","خبز"],["Eggs","بيض"],["Drink","يشرب"]]],
+ ["في المطبخ","أمي تطبخ",[["My mother cooks in the kitchen.","أمي تطبخ في المطبخ."],["She makes tajine.","تحضّر الطاجين."],["The tajine is delicious.","الطاجين لذيذ."],["Can I help you?","هل أستطيع مساعدتك؟"]],[["Cook","يطبخ"],["Delicious","لذيذ"],["Help","يساعد"],["Plate","صحن"],["Spoon","ملعقة"]]],
+ ["الأحد عند الجدة","وقت العائلة",[["On Sunday, we visit my grandmother.","يوم الأحد نزور جدتي."],["She lives in Casablanca.","تسكن في الدار البيضاء."],["We eat lunch together.","نتناول الغداء معًا."],["I love Sundays.","أحب أيام الأحد."]],[["Grandmother","جدة"],["Sunday","الأحد"],["Visit","يزور"],["Together","معًا"],["Lunch","غداء"]]],
+ ["الألوان والملابس","ماذا أرتدي؟",[["I wear a blue shirt.","أرتدي قميصًا أزرق."],["My sister has a red dress.","أختي لديها فستان أحمر."],["My shoes are black.","حذائي أسود."],["What color is it?","ما لونه؟"]],[["Blue","أزرق"],["Red","أحمر"],["Black","أسود"],["Shirt","قميص"],["Shoes","حذاء"]]],
+ ["صف بيتك","مراجعة الأسبوع الثاني",[["My house is in Rabat.","بيتي في الرباط."],["It has a kitchen and three rooms.","فيه مطبخ وثلاث غرف."],["I eat breakfast with my family.","أتناول الفطور مع عائلتي."],["My phone is on the table.","هاتفي على الطاولة."]],[["Describe","يصف"],["Home","بيت"],["Room","غرفة"],["Kitchen","مطبخ"],["House","منزل"]]],
+
+ ["أستيقظ مبكرًا","الروتين الصباحي",[["I wake up at seven.","أستيقظ في السابعة."],["I brush my teeth.","أنظف أسناني."],["I take a shower.","أستحم."],["I get dressed.","أرتدي ملابسي."]],[["Wake up","يستيقظ"],["Brush","ينظّف بالفرشاة"],["Shower","دُش"],["Seven","سبعة"],["Early","مبكرًا"]]],
+ ["إلى الجامعة","المواصلات",[["I go to the university by bus.","أذهب إلى الجامعة بالحافلة."],["The bus comes at eight.","تأتي الحافلة في الثامنة."],["I take my bag and my books.","آخذ حقيبتي وكتبي."],["I am not late.","لست متأخرًا."]],[["Bus","حافلة"],["Go","يذهب"],["Late","متأخر"],["Book","كتاب"],["Come","يأتي"]]],
+ ["كم الساعة؟","الوقت",[["What time is it?","كم الساعة؟"],["It is nine o'clock.","الساعة التاسعة."],["Class starts at half past nine.","تبدأ الحصة في التاسعة والنصف."],["I finish at four.","أنتهي في الرابعة."]],[["Time","وقت"],["O'clock","تمامًا (الساعة)"],["Half","نصف"],["Start","يبدأ"],["Finish","ينتهي"]]],
+ ["في الجامعة","الدراسة والأصدقاء",[["I study English and computer science.","أدرس الإنجليزية وعلوم الحاسوب."],["My teacher is kind.","أستاذي لطيف."],["I have lunch with my friends.","أتناول الغداء مع أصدقائي."],["We talk and laugh.","نتحدث ونضحك."]],[["Friend","صديق"],["Kind","لطيف"],["Talk","يتحدث"],["Laugh","يضحك"],["Class","حصة"]]],
+ ["هواياتي","ماذا أحب أن أفعل؟",[["I like football.","أحب كرة القدم."],["I play with my friends on Saturday.","ألعب مع أصدقائي يوم السبت."],["I also like reading.","أحب القراءة أيضًا."],["What do you like to do?","ماذا تحب أن تفعل؟"]],[["Football","كرة القدم"],["Play","يلعب"],["Read","يقرأ"],["Like","يحب"],["Hobby","هواية"]]],
+ ["المساء في البيت","العشاء والراحة",[["I come home at five.","أصل البيت في الخامسة."],["I do my homework.","أنجز واجبي."],["We have dinner at eight.","نتناول العشاء في الثامنة."],["Then I watch TV.","ثم أشاهد التلفاز."]],[["Homework","واجب"],["Dinner","عشاء"],["Watch","يشاهد"],["Then","ثم"],["Home","بيت"]]],
+ ["صف يومك","مراجعة الأسبوع الثالث",[["I wake up at seven and go to the university.","أستيقظ في السابعة وأذهب إلى الجامعة."],["I study and play football.","أدرس وألعب كرة القدم."],["I have dinner with my family.","أتناول العشاء مع عائلتي."],["I sleep at eleven.","أنام في الحادية عشرة."]],[["Sleep","ينام"],["Day","يوم"],["Every day","كل يوم"],["Morning","صباح"],["Night","ليل"]]],
+
+ ["في المدينة","الأماكن العامة",[["I walk in the city.","أمشي في المدينة."],["There is a bank and a pharmacy.","يوجد بنك وصيدلية."],["The park is near my house.","الحديقة قريبة من بيتي."],["Where is the post office?","أين مكتب البريد؟"]],[["Bank","بنك"],["Pharmacy","صيدلية"],["Park","حديقة"],["Near","قريب"],["Street","شارع"]]],
+ ["الاتجاهات","يمين، يسار، إلى الأمام",[["Turn left at the corner.","انعطف يسارًا عند الزاوية."],["Go straight.","امشِ إلى الأمام."],["The station is on the right.","المحطة على اليمين."],["It is far from here.","إنها بعيدة من هنا."]],[["Left","يسار"],["Right","يمين"],["Straight","مباشرة"],["Far","بعيد"],["Corner","زاوية"]]],
+ ["في السوق","الأسعار والفواكه",[["I go to the market.","أذهب إلى السوق."],["I buy tomatoes and oranges.","أشتري طماطم وبرتقالًا."],["How much is one kilo?","بكم الكيلو؟"],["It is ten dirhams.","عشرة دراهم."]],[["Market","سوق"],["Buy","يشتري"],["Orange","برتقال"],["Kilo","كيلو"],["Dirham","درهم"]]],
+ ["شراء الملابس","المقاس والسعر",[["I want a jacket.","أريد سترة."],["Do you have a bigger size?","هل لديك مقاس أكبر؟"],["It is too expensive.","إنه غالٍ جدًا."],["I will take it.","سآخذه."]],[["Want","يريد"],["Jacket","سترة"],["Size","مقاس"],["Expensive","غالٍ"],["Cheap","رخيص"]]],
+ ["في المقهى","الطلب بأدب",[["Can I have a coffee, please?","هل أستطيع الحصول على قهوة من فضلك؟"],["With milk and sugar.","بالحليب والسكر."],["Here you are.","تفضّل."],["Thank you very much.","شكرًا جزيلًا."]],[["Coffee","قهوة"],["Milk","حليب"],["Sugar","سكر"],["Please","من فضلك"],["Here you are","تفضّل"]]],
+ ["الهاتف والرسائل","التواصل مع الأصدقاء",[["I call my mother every day.","أتصل بأمي كل يوم."],["I send a message to my friend.","أرسل رسالة إلى صديقي."],["What is your phone number?","ما رقم هاتفك؟"],["See you tomorrow!","أراك غدًا!"]],[["Call","يتصل"],["Message","رسالة"],["Number","رقم"],["Tomorrow","غدًا"],["Send","يرسل"]]],
+ ["في المدينة مرة أخرى","مراجعة الأسبوع الرابع",[["I go to the market and buy oranges.","أذهب إلى السوق وأشتري برتقالًا."],["The bank is on the left.","البنك على اليسار."],["I drink coffee in a café.","أشرب القهوة في مقهى."],["The city is beautiful.","المدينة جميلة."]],[["Beautiful","جميل"],["Café","مقهى"],["Walk","يمشي"],["Visit","يزور"],["Left","يسار"]]],
+
+ ["قصتي","اكتب وتحدث عن نفسك",[["My name is Adam and I am twenty.","اسمي آدم وعمري عشرون."],["I live in Rabat with my family.","أعيش في الرباط مع عائلتي."],["I study at the university every day.","أدرس في الجامعة كل يوم."],["I like football and I like English.","أحب كرة القدم وأحب الإنجليزية."]],[["Story","قصة"],["Write","يكتب"],["Also","أيضًا"],["And","و"],["Every day","كل يوم"]]],
+ ["تحدث لدقيقة","التحضير للاختبار النهائي",[["Hello, my name is Adam.","مرحبًا، اسمي آدم."],["I speak a little English.","أتحدث القليل من الإنجليزية."],["I want to learn more every day.","أريد أن أتعلم أكثر كل يوم."],["Thank you for listening!","شكرًا لاستماعك!"]],[["Speak","يتحدث"],["Learn","يتعلم"],["More","أكثر"],["Listen","يستمع"],["A little","قليلًا"]]]
+];
+
+/* ---- المستويات ---- */
+const LEVELS = [
+ { id:"a1", tag:"A1", next:"A2", name:"البداية", goal:"تحدث عن نفسك في 30 يومًا", sub:"من الصفر إلى أول محادثة", story:ADAM,
+   courseTitle:"كورس المبتدئين من الصفر", courseUrl:yt("zAmericanEnglish تعلم الانجليزية من الصفر للمبتدئين"),
+   tip:"كرّر كل جملة بصوت عالٍ بعد سماعها. النطق أهم من الحفظ.",
+   cartoons:[{title:"أغاني الحروف والأرقام",url:yt("ABC phonics song for kids Super Simple Songs")},{title:"كلمات بالصور للمبتدئين",url:yt("learn English vocabulary cartoon for beginners")}],
+   podcasts:[{title:"BBC — The English We Speak",url:yt("BBC Learning English The English We Speak")}],
+   words:[], pass:6,
+   quiz:[
+    {q:"ما معنى Thank you؟",o:["شكراً","من فضلك","مع السلامة","نعم"],a:0},
+    {q:"كيف تقول «صباح الخير»؟",o:["Good night","Good morning","Goodbye","Sorry"],a:1},
+    {q:"ما معنى Water؟",o:["خبز","ماء","كتاب","بيت"],a:1},
+    {q:"كيف تقول «اسمي أحمد»؟",o:["Name my Ahmed","I name Ahmed","My name is Ahmed","Is name Ahmed"],a:2},
+    {q:"ما معنى Goodbye؟",o:["مرحباً","مع السلامة","عفواً","تفضل"],a:1},
+    {q:"ما الرقم Three؟",o:["1","2","3","4"],a:2},
+    {q:"ما معنى Book؟",o:["قلم","كتاب","باب","طاولة"],a:1},
+    {q:"كيف تقول «من فضلك»؟",o:["Please","Sorry","Welcome","Hello"],a:0},
+    {q:"She ___ a teacher.",o:["am","is","are","be"],a:1},
+    {q:"I ___ from Morocco.",o:["am","is","are","be"],a:0},
+    {q:"They ___ my friends.",o:["is","am","are","be"],a:2},
+    {q:"He ___ football every day.",o:["play","plays","playing","played"],a:1},
+    {q:"ما معنى Brother؟",o:["أخت","أخ","عم","جد"],a:1},
+    {q:"أي جملة سؤال صحيحة؟",o:["You like tea do?","Like you tea?","Do you like tea?","Tea you like?"],a:2},
+    {q:"ما معنى Friend؟",o:["عدو","صديق","جار","معلم"],a:1},
+    {q:"___ you like coffee?",o:["Does","Do","Is","Are"],a:1}]},
+ { id:"a2", tag:"A2", next:"B1", name:"الحياة اليومية", goal:"تحدث عن يومك في 30 يومًا", sub:"الماضي، التسوق، الاتجاهات",
+   courseTitle:"كورس المستوى الثاني", courseUrl:yt("zAmericanEnglish كورس الانجليزية المستوى الثاني الماضي البسيط"),
+   tip:"تعلّم 5 أفعال شاذة كل يوم (go → went, eat → ate).",
+   cartoons:[{title:"مواقف يومية: تسوق ومطعم",url:yt("English cartoon daily life shopping restaurant dialogue")},{title:"قصص قصيرة مبسطة",url:yt("Learn English through story level 2 animated")}],
+   podcasts:[{title:"BBC — 6 Minute English",url:yt("BBC Learning English 6 Minute English")}],
+   words:[["Went (go)","ذهب"],["Ate (eat)","أكل"],["How much is this?","بكم هذا؟"],["Turn left / right","انعطف يساراً / يميناً"],["Straight ahead","إلى الأمام مباشرة"],["Yesterday","أمس"],["I was watching TV","كنت أشاهد التلفاز"],["I didn't know","لم أكن أعرف"],["Expensive / Cheap","غالٍ / رخيص"],["Can I have...?","هل يمكنني الحصول على ...؟"]],
+   pass:6,
+   quiz:[
+    {q:"Yesterday I ___ to the market.",o:["go","goes","went","going"],a:2},
+    {q:"ما معنى «How much is this?»",o:["من هذا؟","أين هذا؟","بكم هذا؟","ما هذا؟"],a:2},
+    {q:"صيغة الماضي من eat هي:",o:["eated","ate","eaten","eats"],a:1},
+    {q:"ما معنى «Turn left»؟",o:["انعطف يميناً","قف","انعطف يساراً","ارجع"],a:2},
+    {q:"I ___ watching TV when you called.",o:["was","were","am","be"],a:0},
+    {q:"She didn't ___ the book.",o:["reads","reading","readed","read"],a:3},
+    {q:"ما معنى Expensive؟",o:["رخيص","غالٍ","كبير","جديد"],a:1},
+    {q:"Can I ___ some water, please?",o:["has","have","having","had"],a:1}]},
+ { id:"b1", tag:"B1", next:"B2", name:"المتوسط", goal:"سافر وتفاهم في 30 يومًا", sub:"Present Perfect والشروط والسفر",
+   courseTitle:"كورس المستوى المتوسط", courseUrl:yt("zAmericanEnglish كورس المستوى المتوسط انجليزي intermediate"),
+   tip:"اكتب 3 جمل يوميًا عن يومك بالأزمنة الجديدة؛ الكتابة تثبّت القواعد.",
+   cartoons:[{title:"مسلسل بحوارات أطول",url:yt("English animated series intermediate with English subtitles")},{title:"مفردات السفر والمطار",url:yt("English at the airport animated lesson")}],
+   podcasts:[{title:"British Council — LearnEnglish Intermediate",url:yt("British Council LearnEnglish Intermediate Podcast")},{title:"English Learning for Curious Minds",url:yt("English Learning for Curious Minds podcast")}],
+   words:[["I have seen","لقد رأيت"],["Since 2020","منذ 2020"],["For five years","لمدة خمس سنوات"],["Although","مع أن"],["If I were you","لو كنت مكانك"],["Unless","ما لم"],["Experience","خبرة / تجربة"],["Journey","رحلة"],["Reservation","حجز"],["Delayed","متأخر / مؤجل"]],
+   pass:6,
+   quiz:[
+    {q:"I have ___ this film twice.",o:["see","saw","seen","seeing"],a:2},
+    {q:"If it rains, I ___ stay home.",o:["will","would","did","am"],a:0},
+    {q:"She has lived here ___ five years.",o:["since","for","from","at"],a:1},
+    {q:"ما معنى Although؟",o:["لذلك","مع أن","لأن","قبل"],a:1},
+    {q:"If I were you, I ___ study more.",o:["will","would","am","did"],a:1},
+    {q:"I have lived here ___ 2019.",o:["for","since","during","ago"],a:1},
+    {q:"ما معنى Journey؟",o:["رحلة","مدينة","حجز","تذكرة"],a:0},
+    {q:"You ___ smoke here. It's not allowed.",o:["must","mustn't","can","may"],a:1}]},
+ { id:"b2", tag:"B2", next:"C1", name:"فوق المتوسط", goal:"عبّر عن رأيك في 30 يومًا", sub:"المبني للمجهول، العبارات الفعلية، الرأي",
+   courseTitle:"كورس المستوى المتقدم", courseUrl:yt("zAmericanEnglish كورس المستوى المتقدم انجليزي advanced"),
+   tip:"شاهد بترجمة إنجليزية فقط، والتقط المعنى العام بدل ترجمة كل كلمة.",
+   cartoons:[{title:"شرح Phrasal Verbs متحرك",url:yt("animated English lesson phrasal verbs explained")},{title:"دروس TED-Ed",url:yt("TED-Ed animated English lessons")}],
+   podcasts:[{title:"BBC — The English We Speak",url:yt("BBC The English We Speak podcast")},{title:"Business English Pod",url:yt("Business English Pod")}],
+   words:[["Give up","يستسلم / يتوقف"],["Look forward to","يتطلع إلى"],["Turn down","يرفض"],["Carry on","يستمر"],["In my opinion","في رأيي"],["On the other hand","من ناحية أخرى"],["It was written by...","كُتب بواسطة ..."],["He said he was tired","قال إنه كان متعباً"],["Deadline","موعد نهائي"],["Achieve","يحقق"]],
+   pass:6,
+   quiz:[
+    {q:"ما معنى «give up»؟",o:["يعطي","يستسلم","يرفع","يبدأ"],a:1},
+    {q:"The report ___ by the manager yesterday.",o:["wrote","was written","is writing","has write"],a:1},
+    {q:"I look forward to ___ you.",o:["see","saw","seeing","seen"],a:2},
+    {q:"ما معنى «turn down an offer»؟",o:["يقبل عرضاً","يرفض عرضاً","يقدّم عرضاً","ينسى عرضاً"],a:1},
+    {q:"He said he ___ tired.",o:["is","was","be","being"],a:1},
+    {q:"«On the other hand» تعني:",o:["من ناحية أخرى","في النهاية","على اليد","بسبب ذلك"],a:0},
+    {q:"ما معنى «carry on»؟",o:["يحمل","يستمر","يتوقف","يعود"],a:1},
+    {q:"If I had known, I ___ come.",o:["will","would have","would","had"],a:1}]},
+ { id:"c1", tag:"C1", next:"C2", name:"الطلاقة والمحادثة", goal:"تحدث بطلاقة في 30 يومًا", sub:"التعابير والمحادثة الطبيعية",
+   courseTitle:"كورس المحادثة والطلاقة", courseUrl:yt("تعلم المحادثة بالانجليزية بطلاقة كورس كامل zAmericanEnglish"),
+   tip:"جرّب Shadowing: شغّل جملة، أوقف، وكررها بنفس النبرة والسرعة. 15 دقيقة يوميًا تكفي.",
+   cartoons:[{title:"حوارات طبيعية مع ترجمة",url:yt("natural English conversations native speakers with subtitles")},{title:"تعابير Idioms مصوّرة",url:yt("English idioms animated explained")}],
+   podcasts:[{title:"BBC — Real Conversations",url:yt("BBC Learning English conversations podcast")},{title:"All Ears English",url:yt("All Ears English podcast")}],
+   words:[["Break a leg","حظاً موفقاً"],["A piece of cake","سهل جداً"],["How's it going?","كيف الحال؟"],["I'm not sure I follow","لست متأكداً أني فهمت"],["Could you say that again?","هل يمكنك إعادة ذلك؟"],["Hang on a second","انتظر لحظة"],["No worries","لا تقلق / لا بأس"],["By the way","بالمناسبة"],["To be honest","بصراحة"],["That makes sense","هذا منطقي"]],
+   pass:6,
+   quiz:[
+    {q:"ما معنى «Break a leg»؟",o:["اكسر رجلك","حظاً موفقاً","توقف","أسرع"],a:1},
+    {q:"«It's a piece of cake» تعني:",o:["قطعة كعك","سهل جداً","غالٍ جداً","لذيذ"],a:1},
+    {q:"ردّ طبيعي على «How's it going?»",o:["I am going home.","Not bad, thanks. And you?","Yes, please.","It is Monday."],a:1},
+    {q:"ماذا تقول إذا لم تفهم؟",o:["I'm not sure I follow.","See you later.","Good night.","With pleasure."],a:0},
+    {q:"«Hang on a second» تعني:",o:["علّق الصورة","انتظر لحظة","اذهب بعيداً","أسرع"],a:1},
+    {q:"«No worries» تُقال غالباً لـ:",o:["التعبير عن الغضب","الطلب من أحد الذهاب","قول «لا بأس / لا تقلق»","قول «أنا قلق»"],a:2},
+    {q:"ماذا تقول لتغيير الموضوع؟",o:["By the way","Good night","Excuse the door","Thank you very much"],a:0},
+    {q:"«To be honest» تعني:",o:["بصراحة","بسرعة","بالتأكيد","بالمناسبة"],a:0}]}
+];
+LEVELS[0].words = ADAM.flatMap(d => d[3]);
+
+const PODCASTS = [
+ {t:"BBC — 6 Minute English",l:"متوسط",d:"نقاشات قصيرة بمواضيع متنوعة مع شرح المفردات.",u:yt("BBC Learning English 6 Minute English")},
+ {t:"British Council — LearnEnglish",l:"كل المستويات",d:"حلقات حوارية عن مواقف الحياة اليومية والمفردات.",u:yt("British Council LearnEnglish podcast")},
+ {t:"BBC — The English We Speak",l:"متوسط",d:"تعبير واحد في كل حلقة، قصيرة جدًا.",u:yt("BBC The English We Speak")},
+ {t:"All Ears English",l:"متقدم",d:"محادثات طبيعية وتعابير أمريكية.",u:yt("All Ears English podcast")}
+];
+const CARTOONS = [
+ {t:"Super Simple Songs",l:"مبتدئ",d:"أغاني وكلمات بسيطة بالصور.",u:yt("Super Simple Songs")},
+ {t:"محادثات كرتون للمبتدئين",l:"مبتدئ",d:"حوارات قصيرة مع ترجمة.",u:yt("easy English conversation cartoon beginners subtitles")},
+ {t:"Idioms المتحركة",l:"متوسط",d:"التعابير الشائعة بأمثلة مصورة.",u:yt("English idioms animated")},
+ {t:"TED-Ed",l:"متقدم",d:"فيديوهات متحركة بمواضيع علمية وفكرية.",u:yt("TED-Ed")}
+];
+
+/* =====================================================================
+   الحالة
+   ===================================================================== */
+const KEY = "englishPath.v3";
+const fresh = () => ({done:{}, days:{}, log:{}, seen:{}, name:""});
+let S = load();
+function load(){ try{ return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY))||{}); }catch(e){ return fresh(); } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const view = $("#app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dkey = (d=new Date()) => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const byId = id => LEVELS.find(l => l.id===id);
+const idxOf = id => LEVELS.findIndex(l => l.id===id);
+
+const passed = id => S.done[id] !== undefined;
+const levelUnlocked = i => i===0 || passed(LEVELS[i-1].id);
+const daysList = id => S.days[id]||[];
+const daysDone = id => daysList(id).length;
+const allDaysDone = id => daysDone(id) >= DAYS;
+const totalDays = () => LEVELS.reduce((n,l)=>n+daysDone(l.id),0);
+const curLevelIdx = () => { const i = LEVELS.findIndex(l=>!passed(l.id)); return i<0 ? LEVELS.length-1 : i; };
+function curDay(id){ const d=daysList(id); for(let k=1;k<=DAYS;k++) if(!d.includes(k)) return k; return null; }
+const dayUnlocked = (id,d) => d===1 || daysList(id).includes(d-1) || daysList(id).includes(d);
+function streak(){ let n=0; const d=new Date(); if(!S.log[dkey(d)]) d.setDate(d.getDate()-1); while(S.log[dkey(d)]){ n++; d.setDate(d.getDate()-1);} return n; }
+
+function speak(t){ if(!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; u.rate=.85; speechSynthesis.speak(u);}catch(e){} }
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+let _m=0;
+function mascot(size){
+  const id="mg"+(++_m);
+  return `<svg class="mascot" viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a7a"/><stop offset=".45" stop-color="#5b3df5"/><stop offset="1" stop-color="#1e40d8"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#${id})"/><g stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"><path d="M28 46q7-10 14 0"/><path d="M58 46q7-10 14 0"/><path d="M36 62q14 14 28 0"/></g></svg>`;
+}
+
+/* يوم واحد (بيانات موحّدة للأيام المكتوبة والمولّدة) */
+function getDay(l, d){
+  const wi = weekIdx(d);
+  if(l.story){
+    const [t, sub, read, words] = l.story[d-1];
+    const w0=words[0][0], w1=words[1][0];
+    return {t, sub, read, words, wk:WEEKS[wi], wi,
+      v:[ {t:"المستوى 1 · الدرس "+d+": "+t, s:"Level 1 · Lesson "+d, ch:CHANNEL, u:yt("zAmericanEnglish المستوى الاول الدرس "+d)},
+          {t:"فيديو مساند: "+t, s:"Support video · "+w0+", "+w1, ch:"YouTube", u:yt("learn English "+w0+" "+w1+" for beginners")} ]};
+  }
+  const half=(d-1)%2, words=l.words.slice(half*5, half*5+5);
+  let v2;
+  if(d%2===1){ const c=l.cartoons[((d-1)/2|0)%l.cartoons.length]; v2={t:c.title, s:"فيديو مساند", ch:"YouTube", u:c.url}; }
+  else { const p=l.podcasts[(d/2-1)%l.podcasts.length]; v2={t:p.title, s:"بودكاست مساند", ch:"YouTube", u:p.url}; }
+  return {t:"تدريب اليوم "+d, sub:words.map(w=>w[0]).join(" · "), read:null, words, wk:{en:"WEEK "+(wi+1), ar:"الأسبوع "+(wi+1)}, wi,
+    v:[ {t:l.courseTitle, s:"الدرس "+d, ch:CHANNEL, u:l.courseUrl}, v2 ]};
+}
+
+function completeDay(id, d){
+  S.days[id] = S.days[id]||[];
+  if(!S.days[id].includes(d)) S.days[id].push(d);
+  S.log[dkey()] = true; save();
+}
+const seenArr = (id,d) => S.seen[id+":"+d] || [false,false];
+function markSeen(id,d,i){ const a=seenArr(id,d).slice(); a[i]=true; S.seen[id+":"+d]=a; save(); }
+
+/* =====================================================================
+   التوجيه
+   ===================================================================== */
+let quiz = null;
+function route(){
+  const [, page, id, a, b] = location.hash.split("/");
+  window.scrollTo(0,0);
+  let nav = "home";
+  if(page==="level" && byId(id)) renderLevel(id, a||"path");
+  else if(page==="day" && byId(id) && +a>=1 && +a<=DAYS) renderDay(id, +a);
+  else if(page==="quiz" && byId(id)) startQuiz(id);
+  else if(page==="explore"){ nav="explore"; renderExplore(); }
+  else if(page==="progress"){ nav="progress"; renderProgress(); }
+  else if(page==="me"){ nav="me"; renderMe(); }
+  else renderHome();
+  document.querySelectorAll(".nav a").forEach(x=>x.classList.toggle("on", x.dataset.n===nav));
+}
+window.addEventListener("hashchange", route);
+
+function bindCommon(){
+  view.querySelectorAll(".prog[data-id]").forEach(el=>el.onclick=()=>{
+    if(el.dataset.open==="true") location.hash="#/level/"+el.dataset.id; else toast("اجتز اختبار المستوى السابق أولاً 🔒");
+  });
+  view.querySelectorAll("[data-say]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); speak(b.dataset.say); });
+  view.querySelectorAll(".word").forEach(w=>w.onclick=()=>w.classList.toggle("show"));
+}
+
+/* =====================================================================
+   الرئيسية
+   ===================================================================== */
+const greeting = () => { const h=new Date().getHours(); return h<5?"مساء النور":h<12?"صباح النور":h<18?"طاب يومك":"مساء النور"; };
+
+function weekStrip(){
+  const names=["أحد","إثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"];
+  const now=new Date(), start=new Date(now); start.setDate(now.getDate()-now.getDay());
+  return `<div class="week">`+names.map((n,i)=>{
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const k=dkey(d), isT=k===dkey(now), dn=!!S.log[k];
+    return `<div class="wd ${dn?"done":""} ${isT?"today":""}"><div class="c">${dn?"✓":""}</div>${n}</div>`;
+  }).join("")+`</div>`;
+}
+
+function progCard(l,i){
+  const open=levelUnlocked(i), dn=daysDone(l.id), ps=passed(l.id);
+  const tagHtml = ps ? `<span class="tag ok">✔ ${S.done[l.id]}/8</span>` : open ? `<span class="tag">مفتوح</span>` : `<span class="tag">🔒</span>`;
+  return `<div class="card prog ${open?"":"locked"}" data-id="${l.id}" data-open="${open}">
+    <div class="badge">${l.tag}</div>
+    <div class="info"><div class="s">الإنجليزية · ${l.tag} → ${l.next}</div><h3>${esc(l.goal)}</h3>
+      <div class="bar"><i style="width:${Math.round(dn/DAYS*100)}%"></i></div></div>
+    ${tagHtml}</div>`;
+}
+
+function ringSVG(p){
+  const r=44, c=2*Math.PI*r;
+  return `<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="${r}"/><circle class="prg" cx="50" cy="50" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}" transform="rotate(-90 50 50)"/></svg>`;
+}
+
+function levelsMap(){
+  const xs=[50,26,50,74,50], ROW=262, TOP=84, H=LEVELS.length*ROW;
+  const ci=curLevelIdx();
+  let links="", nodes="";
+  LEVELS.forEach((l,i)=>{
+    const cx=xs[i%xs.length], cy=TOP+i*ROW;
+    if(i>0){
+      const px=xs[(i-1)%xs.length], py=TOP+(i-1)*ROW+142, qy=cy-66, my=(py+qy)/2;
+      links+=`<path d="M${px} ${py} C${px} ${my}, ${cx} ${my}, ${cx} ${qy}" class="${passed(LEVELS[i-1].id)?"on":""}"/>`;
+    }
+    const open=levelUnlocked(i), ps=passed(l.id), isCur=(i===ci && !ps);
+    const p = ps ? 1 : daysDone(l.id)/DAYS;
+    const cls = ps ? "done" : open ? "cur" : "locked";
+    const inner = !open ? "🔒" : ps ? `${esc(l.tag)}` : `${esc(l.tag)}`;
+    const sub = ps ? `<span class="chipk">✔ ${S.done[l.id]}/8</span>` : open ? `<span class="chipk">${daysDone(l.id)}/${DAYS} يومًا</span>` : "";
+    nodes+=`<button class="lv ${cls}" data-i="${i}" style="left:${cx}%;top:${cy-54}px" aria-label="${esc(l.tag)} ${esc(l.goal)}">
+      <span class="rw">${ringSVG(p)}${ps?`<span class="crown">👑</span>`:""}${isCur?`<span class="here">ابدأ هنا</span>`:""}<span class="core">${inner}</span></span>
+      <span class="lt"><b>${esc(l.name)}</b><small>${esc(l.goal)}</small>${sub}</span></button>`;
+  });
+  return `<div class="map" style="height:${H+TOP-40}px"><svg class="links" viewBox="0 0 100 ${H+TOP-40}" preserveAspectRatio="none" aria-hidden="true">${links}</svg>${nodes}</div>`;
+}
+
+function openSheet(i){
+  const l=LEVELS[i], open=levelUnlocked(i), ps=passed(l.id), dn=daysDone(l.id), cd=curDay(l.id);
+  const prev=i>0?LEVELS[i-1]:null;
+  let actions="";
+  if(!open) actions=`<div class="tip" style="margin-top:14px">🔒 اجتز الاختبار النهائي لمستوى ${esc(prev.tag)} لفتح هذا المستوى.</div>`;
+  else {
+    const mainLabel = cd ? (dn===0?"ابدأ اليوم 1":"تابع · اليوم "+cd) : (ps?"راجع المستوى":"ابدأ الاختبار النهائي");
+    const mainHref  = cd ? "#/day/"+l.id+"/"+cd : (ps?"#/level/"+l.id:"#/quiz/"+l.id);
+    actions=`<a class="btn" href="${mainHref}" data-close>${mainLabel}</a><a class="btn ghost" href="#/level/${l.id}/path" data-close>عرض كل الأيام</a>`;
+  }
+  const ov=document.createElement("div"); ov.className="ov";
+  ov.innerHTML=`<div class="sheet" role="dialog"><div class="grab"></div>
+    <div class="sh-top"><div class="sh-badge ${!open?"lock":ps?"gold":""}">${open?esc(l.tag):"🔒"}</div>
+      <div><div class="muted small">${esc(l.tag)} → ${esc(l.next)}</div><h2 style="margin:0">${esc(l.goal)}</h2><div class="muted small">${esc(l.sub)}</div></div></div>
+    <div class="sh-stats"><div><b>${dn}/${DAYS}</b><span>أيام</span></div><div><b>${ps?S.done[l.id]+"/8":"—"}</b><span>الاختبار</span></div><div><b>${dn*10}</b><span>نقاط</span></div></div>
+    ${actions}</div>`;
+  ov.addEventListener("click",e=>{ if(e.target===ov || e.target.closest("[data-close]")) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+function renderHome(){
+  const li=curLevelIdx(), l=LEVELS[li], cd=curDay(l.id), done=daysDone(l.id);
+  const day=getDay(l, cd||DAYS);
+  const dots=Array.from({length:DAYS},(_,i)=>`<i class="${i<done?"on":i===done&&cd?"now":""}"></i>`).join("");
+  const everything=LEVELS.every(x=>passed(x.id));
+  const wod=l.words[new Date().getDate()%l.words.length];
+  const heroTitle = cd ? `اليوم ${cd}: ${esc(day.t)}` : (passed(l.id) ? "أنهيت هذا المستوى 🎉" : "حان وقت الاختبار النهائي");
+  const heroSub = cd ? (day.read ? day.read[0][0] : day.sub) : l.goal;
+  view.innerHTML=`
+    <div class="top2">
+      <div class="who">${mascot(42)}<div><small>${greeting()}</small><b>${esc(S.name||"صديقي")}</b></div></div>
+      <div class="chips"><div class="chip">${streak()} 🔥</div><div class="chip">${totalDays()*10} <span class="dot"></span></div></div>
+    </div>
+    <div class="hero">
+      <div class="hero-top">${mascot(60)}
+        <div class="ht"><small>ENGLISH · ${l.tag} → ${l.next}</small><b>${heroTitle}</b><span>${esc(heroSub)}</span></div></div>
+      <div class="dots">${dots}</div>
+      <div class="hero-row">
+        <div class="t"><b>${done}/${DAYS} يومًا</b><span>${esc(cd?day.wk.ar:l.goal)}</span></div>
+        <button class="cta" id="go">${everything?"راجع من جديد":cd?"ابدأ الدرس":"ابدأ الاختبار"}</button>
+      </div>
+    </div>
+    <div class="sec" style="margin-top:6px"><h2>هذا الأسبوع</h2><span class="muted small">🔥 مواظبة ${streak()}</span></div>
+    ${weekStrip()}
+    <div class="maphead"><h1 style="font-size:1.35rem">مستوياتك</h1><span class="muted small">${LEVELS.filter(x=>passed(x.id)).length} من ${LEVELS.length}</span></div>
+    ${levelsMap()}
+    <div class="sec"><h2>كلمة اليوم</h2></div>
+    <div class="card wod"><div><b>${esc(wod[0])}</b><span class="muted">${esc(wod[1])}</span></div><button class="spk" data-say="${esc(wod[0])}" aria-label="استمع">🔊</button></div>
+    <div class="sec"><h2>قريبًا</h2></div>
+    <div class="soon-grid">
+      <div class="soon"><div class="ic">💬</div><h3>محادثة بالذكاء الاصطناعي</h3><span class="tag soon">قريبًا</span></div>
+      <div class="soon"><div class="ic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon">قريبًا</span></div>
+    </div>`;
+  $("#go").onclick=()=>{ location.hash = cd ? "#/day/"+l.id+"/"+cd : (passed(l.id) ? "#/level/"+l.id : "#/quiz/"+l.id); };
+  view.querySelectorAll(".lv").forEach(b=>b.onclick=()=>openSheet(+b.dataset.i));
+  const cur=view.querySelector(".lv.cur");
+  bindCommon();
+}
+
+/* =====================================================================
+   صفحة المستوى: المسار / الكلمات / الدليل
+   ===================================================================== */
+function renderLevel(id, tab){
+  const i=idxOf(id), l=LEVELS[i];
+  if(!levelUnlocked(i)){ location.hash="#/"; return; }
+  const cd=curDay(id), dn=daysList(id);
+  let body="";
+  if(tab==="path"){
+    const off=[0,-46,-68,-46,0,46,68,46];
+    let h="";
+    for(let d=1; d<=DAYS; d++){
+      const g=getDay(l,d);
+      if(d===1 || (d-1)%7===0){ const w=g.wk; h+=`<div class="wk"><span class="eyebrow">${esc(w.en)}</span><b>الأسبوع ${g.wi+1}${l.story?" · "+esc(w.ar):""}</b></div>`; }
+      const isDone=dn.includes(d), isCur=d===cd, open=dayUnlocked(id,d);
+      const cls = isCur?"cur":isDone?"done":open?"open":"locked";
+      const inner = isCur ? mascot(78) : isDone ? "✓" : open ? d : "🔒";
+      h+=`<div class="pn" style="transform:translateX(${off[(d-1)%8]}px)">
+        <button class="node ${cls}" data-day="${d}" aria-label="اليوم ${d}">${isCur?`<span class="here">ابدأ هنا</span>`:""}${inner}</button>
+        <div class="pl"><b>اليوم ${d}</b><span>${esc(g.t)}</span></div></div>`;
+    }
+    const ready=allDaysDone(id), ps=passed(id);
+    h+=`<div class="pn"><button class="node ${ready?"open final":"locked"}" id="finalNode" style="${ready?"color:#fff;border:0":""}">${ps?"✔":ready?"🏁":"🔒"}</button>
+      <div class="pl"><b>الاختبار النهائي</b><span>${ps?`نجحت: ${S.done[id]}/8`:ready?"اضغط للبدء":"أنهِ الأيام الـ 30 أولاً"}</span></div></div>`;
+    body=`<div class="pathwrap">${h}</div>`;
+  } else if(tab==="words"){
+    const upto = l.story ? Math.max(cd? cd : DAYS, 1) : DAYS;
+    let ws=[]; const seen={};
+    if(l.story){ for(let d=1; d<=upto; d++) getDay(l,d).words.forEach(w=>{ if(!seen[w[0]]){seen[w[0]]=1; ws.push(w);} }); }
+    else ws=l.words;
+    body=`<p class="muted small">كلمات الأيام التي وصلت لها (${ws.length}). اضغط على البطاقة لترى المعنى، وعلى 🔊 للنطق.</p><div class="words">`+
+      ws.map(([en,ar])=>`<div class="word"><button class="spk" data-say="${esc(en)}" aria-label="استمع">🔊</button><b>${esc(en)}</b><span>${esc(ar)}</span></div>`).join("")+`</div>`;
+  } else {
+    body=`<div class="card"><h2>${esc(l.goal)}</h2><p class="muted">${esc(l.sub)}. كل يوم: فيديوهان، قراءة، كلمات، وتحدث، ثم تنهي اليوم.</p>
+      <a class="btn" href="${esc(l.courseUrl)}" target="_blank" rel="noopener">▶ ${esc(l.courseTitle)} — ${CHANNEL}</a></div>
+      <div class="tip">💡 ${esc(l.tip)}</div>
+      ${l.story?`<div class="sec"><h2>خطة الأسابيع</h2></div>`+WEEKS.map((w,k)=>`<div class="card"><span class="eyebrow">WEEK ${k+1} · ${esc(w.en)}</span><h3>${esc(w.ar)}</h3><div class="say"><small>في آخر الأسبوع ستقول:</small><b>${esc(w.say)}</b></div></div>`).join(""):""}
+      <div class="sec"><h2>🎬 كرتون</h2></div><div class="card">${l.cartoons.map(c=>`<div class="row"><div>${esc(c.title)}</div><a class="btn sm ghost" href="${esc(c.url)}" target="_blank" rel="noopener">شاهد</a></div>`).join("")}</div>
+      <div class="sec"><h2>🎧 بودكاست</h2></div><div class="card">${l.podcasts.map(c=>`<div class="row"><div>${esc(c.title)}</div><a class="btn sm ghost" href="${esc(c.url)}" target="_blank" rel="noopener">استمع</a></div>`).join("")}</div>`;
+  }
+  view.innerHTML = `
+    <div class="lh"><a class="back" href="#/">→ الرئيسية</a><div class="pill">${l.tag} → ${l.next}</div></div>
+    <div class="tabs">${[["path","المسار"],["words","الكلمات"],["guide","الدليل"]].map(([k,t])=>`<a class="tab ${k===tab?"on":""}" href="#/level/${id}/${k}">${t}</a>`).join("")}</div>
+    ${body}`;
+  view.querySelectorAll(".node[data-day]").forEach(n=>n.onclick=()=>{
+    const d=+n.dataset.day;
+    if(dayUnlocked(id,d)) location.hash="#/day/"+id+"/"+d; else toast("أنهِ اليوم السابق أولاً 🔒");
+  });
+  const fn=$("#finalNode");
+  if(fn) fn.onclick=()=>{ if(allDaysDone(id)) location.hash="#/quiz/"+id; else toast("أنهِ الأيام الـ 30 أولاً 🔒"); };
+  const hereEl=view.querySelector(".node.cur");
+  if(hereEl && tab==="path") setTimeout(()=>hereEl.scrollIntoView({block:"center",inline:"nearest"}),50);
+  bindCommon();
+}
+
+/* =====================================================================
+   صفحة اليوم
+   ===================================================================== */
+function renderDay(id, d){
+  const i=idxOf(id), l=LEVELS[i];
+  if(!levelUnlocked(i) || !dayUnlocked(id,d)){ location.hash="#/level/"+id; return; }
+  const g=getDay(l,d), isDone=daysList(id).includes(d), seen=seenArr(id,d);
+  const sayTxt = g.wk.say;
+  const sayEn = l.story ? g.wk.say : "";
+  view.innerHTML = `
+    <a class="back" href="#/level/${id}">→ المسار</a>
+    <div class="dayhead">
+      <div class="row1"><div><span class="eyebrow">${esc(g.wk.en)}</span><h1>${esc(g.t)}</h1><div class="muted">${esc(g.sub)}</div></div><div class="num">${d}</div></div>
+      ${sayEn?`<div class="say"><small>في آخر الأسبوع ستقول:</small><b>${esc(sayEn)}</b><div class="muted small" style="margin-top:4px">${esc(g.wk.sayAr)}</div></div>`:""}
+    </div>
+
+    <div class="sech"><div class="n">1</div><h2>🎧 الاستماع</h2></div>
+    <p class="note">شاهد الفيديوهين بالترتيب. يفتح الفيديو في يوتيوب، ارجع إلى هنا بعد المشاهدة.</p>
+    ${g.v.map((v,k)=>`<div class="vid ${seen[k]?"seen":""}" data-k="${k}"><div class="vt"><div class="vn">${esc(v.t)}</div><div class="vs">${esc(v.s)}</div><div class="vc">${esc(v.ch)}</div></div>
+      <a class="play" href="${esc(v.u)}" target="_blank" rel="noopener" data-k="${k}" aria-label="شغّل">${seen[k]?"✓":"▶"}</a></div>`).join("")}
+
+    ${g.read?`<div class="sech"><div class="n">2</div><h2>📖 القراءة</h2></div><p class="note">اضغط على الجملة لترى الترجمة، وعلى 🔊 لتسمعها.</p>`+
+      g.read.map(([en,ar])=>`<div class="sent"><div class="top"><div class="en">${esc(en)}</div><button class="spk sm" data-say="${esc(en)}" aria-label="استمع">🔊</button></div><div class="ar">${esc(ar)}</div></div>`).join(""):""}
+
+    <div class="sech"><div class="n">${g.read?3:2}</div><h2>🗂️ الكلمات</h2></div>
+    <div class="words">${g.words.map(([en,ar])=>`<div class="word"><button class="spk" data-say="${esc(en)}" aria-label="استمع">🔊</button><b>${esc(en)}</b><span>${esc(ar)}</span></div>`).join("")}</div>
+
+    <div class="sech"><div class="n">${g.read?4:3}</div><h2>🗣️ التحدث</h2></div>
+    <div class="card"><p style="margin-top:0">${g.read?"استمع للجمل كاملة ثم كررها بصوتك، جملة جملة، حتى تنطقها بسلاسة.":"انطق الكلمات الخمس بصوت عالٍ ثلاث مرات، ثم ركّب بها جملة من عندك."}</p>
+      <button class="btn ghost" id="sayAll" style="margin-top:0">🔊 ${g.read?"استمع للجمل":"استمع للكلمات"}</button></div>
+
+    <div class="dock"><button class="btn" id="finish"></button></div>`;
+
+  const dock=$("#finish");
+  function refresh(){
+    const s=seenArr(id,d), both=s[0]&&s[1];
+    if(isDone){ dock.textContent = d<DAYS ? "✓ تم — اليوم التالي ←" : "✓ تم — العودة للمسار"; dock.disabled=false; dock.className="btn ok"; }
+    else if(!both){ dock.textContent="شاهد الفيديوهين أولاً"; dock.disabled=true; dock.className="btn"; }
+    else { dock.textContent="✅ أنهيت اليوم "+d; dock.disabled=false; dock.className="btn ok"; }
+  }
+  refresh();
+  view.querySelectorAll(".play").forEach(a=>a.addEventListener("click",()=>{
+    const k=+a.dataset.k; markSeen(id,d,k);
+    a.textContent="✓"; a.closest(".vid").classList.add("seen"); refresh();
+  }));
+  view.querySelectorAll(".sent").forEach(s=>s.onclick=e=>{ if(e.target.closest(".spk")) return; s.classList.toggle("show"); });
+  $("#sayAll").onclick=()=>speak(g.read ? g.read.map(r=>r[0]).join(" ") : g.words.map(w=>w[0]).join(". "));
+  dock.onclick=()=>{
+    if(dock.disabled) return;
+    if(isDone){ location.hash = d<DAYS ? "#/day/"+id+"/"+(d+1) : "#/level/"+id; return; }
+    completeDay(id,d);
+    if(d===DAYS) toast("أنهيت الـ 30 يومًا! الاختبار النهائي مفتوح 🏁"); else toast("أحسنت! 🔥 مواظبة "+streak());
+    location.hash="#/level/"+id;
+  };
+  bindCommon();
+}
+
+/* =====================================================================
+   الاختبار
+   ===================================================================== */
+function startQuiz(id){
+  const l=byId(id);
+  if(!allDaysDone(id)){ toast("أنهِ الأيام الـ 30 أولاً 🔒"); location.hash="#/level/"+id; return; }
+  quiz={id,n:0,score:0,locked:false,wrong:[],qs:shuffle(l.quiz).slice(0,8).map(q=>({q:q.q,opts:shuffle(q.o.map((t,k)=>({t,ok:k===q.a})))}))};
+  renderQ();
+}
+function renderQ(){
+  const l=byId(quiz.id), c=quiz.qs[quiz.n], ltr=/^[\x00-\x7F]/.test(c.q);
+  quiz.locked=false;
+  view.innerHTML=`
+    <a class="back" href="#/level/${l.id}">→ رجوع</a>
+    <div class="card">
+      <div class="muted small">الاختبار النهائي ${esc(l.tag)} · سؤال ${quiz.n+1} من ${quiz.qs.length}</div>
+      <div class="bar"><i style="width:${quiz.n/quiz.qs.length*100}%"></i></div>
+      <div class="q ${ltr?"ltr":""}">${esc(c.q)}</div>
+      ${c.opts.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o.t)}</button>`).join("")}
+      <button class="btn" id="nx" style="display:none">${quiz.n===quiz.qs.length-1?"النتيجة":"التالي"}</button>
+    </div>`;
+  view.querySelectorAll(".opt").forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+  $("#nx").onclick=()=>{ quiz.n++; quiz.n<quiz.qs.length?renderQ():renderResult(); };
+}
+function pick(k){
+  if(quiz.locked) return; quiz.locked=true;
+  const c=quiz.qs[quiz.n];
+  view.querySelectorAll(".opt").forEach((b,i)=>{ b.disabled=true; if(c.opts[i].ok) b.classList.add("right"); else if(i===k) b.classList.add("wrong"); });
+  if(c.opts[k].ok) quiz.score++; else quiz.wrong.push(c.q);
+  $("#nx").style.display="block";
+}
+function renderResult(){
+  const i=idxOf(quiz.id), l=LEVELS[i], ok=quiz.score>=l.pass, last=i===LEVELS.length-1;
+  if(ok){ S.done[l.id]=Math.max(quiz.score,S.done[l.id]||0); S.log[dkey()]=true; save(); }
+  view.innerHTML=`
+    <div class="card">
+      <div class="big">${ok?"🎉":"💪"}</div>
+      <h1 class="center">${quiz.score} / ${quiz.qs.length}</h1>
+      <p class="center">${ok?(last?"أنهيت كل المستويات، ما شاء الله!":"نجحت! فُتح المستوى التالي."):`تحتاج ${l.pass} إجابات صحيحة على الأقل. راجع الكلمات وحاول مجددًا.`}</p>
+      ${quiz.wrong.length?`<div class="tip"><b>أخطأت في:</b><br>${quiz.wrong.map(q=>"• "+esc(q)).join("<br>")}</div>`:""}
+      ${ok&&!last?`<a class="btn ok" href="#/level/${LEVELS[i+1].id}">ابدأ المستوى التالي ←</a>`:""}
+      ${ok&&last?`<a class="btn ok" href="#/">الرئيسية</a>`:""}
+      ${!ok?`<button class="btn" id="retry">🔁 أعد المحاولة</button><a class="btn ghost" href="#/level/${l.id}/words">راجع الكلمات</a>`:""}
+    </div>`;
+  const r=$("#retry"); if(r) r.onclick=()=>startQuiz(l.id);
+}
+
+/* =====================================================================
+   استكشف / تقدّمي / حسابي
+   ===================================================================== */
+function renderExplore(){
+  const list=arr=>arr.map(x=>`<div class="card"><h3>${esc(x.t)} <span class="tag">${esc(x.l)}</span></h3><p class="muted small" style="margin:6px 0 10px">${esc(x.d)}</p><a class="btn sm" href="${esc(x.u)}" target="_blank" rel="noopener">افتح</a></div>`).join("");
+  view.innerHTML=`<h1>استكشف</h1><p class="muted">تعلّم بطرق متنوعة: استمع، شاهد، واستمتع.</p>
+    <div class="sec"><h2>🎧 بودكاست</h2></div>${list(PODCASTS)}
+    <div class="sec"><h2>🎬 كرتون وفيديو</h2></div>${list(CARTOONS)}`;
+}
+function renderProgress(){
+  view.innerHTML=`<h1>تقدّمي</h1>
+    <div class="stats"><div class="stat"><b>${streak()}</b><span>مواظبة</span></div><div class="stat"><b>${totalDays()}</b><span>أيام مكتملة</span></div><div class="stat"><b>${LEVELS.filter(l=>passed(l.id)).length}/${LEVELS.length}</b><span>مستويات</span></div></div>
+    <div class="sec"><h2>المستويات</h2></div>
+    ${LEVELS.map((x,i)=>progCard(x,i)).join("")}`;
+  bindCommon();
+}
+function renderMe(){
+  view.innerHTML=`<h1>حسابي</h1>
+    <div class="sec"><h2>اسمك</h2></div>
+    <input class="txt" id="nm" placeholder="اكتب اسمك" maxlength="20" value="${esc(S.name)}">
+    <p class="muted small">تقدمك محفوظ في هذا المتصفح فقط.</p>
+    <div class="center"><button class="link" id="rs">إعادة ضبط كل التقدم</button></div>`;
+  $("#nm").oninput=e=>{ S.name=e.target.value.trim(); save(); };
+  $("#rs").onclick=()=>{ if(confirm("هل تريد مسح كل تقدمك والبدء من جديد؟")){ S=fresh(); save(); location.hash="#/"; route(); } };
+}
+
+route();
+</script>
+</body>
+</html>
