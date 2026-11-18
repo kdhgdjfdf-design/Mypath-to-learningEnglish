@@ -112,7 +112,7 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .sech .n{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:800}
 .vid{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:20px;padding:12px;margin:10px 0;box-shadow:var(--shadow)}
 .vid .vt{flex:1;min-width:0}
-.vid .vn{font-weight:700}.vid .vs{color:var(--muted);font-size:.82rem;direction:ltr;text-align:right}.vid .vc{color:var(--muted);font-size:.75rem;direction:ltr;text-align:right}
+.vid .vn{font-weight:700}.vid .vs{color:var(--muted);font-size:.82rem}.vid .vc{color:var(--muted);font-size:.75rem;direction:ltr;text-align:right}
 .play{width:54px;height:54px;border-radius:16px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:1.3rem;flex:none}
 .vid.seen .play{background:var(--ok)}
 .note{color:var(--muted);font-size:.82rem;margin:4px 2px}
@@ -199,6 +199,29 @@ input.txt{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(-
 .sh-stats div{background:var(--bg);border-radius:14px;padding:10px 4px;text-align:center}
 .sh-stats b{display:block;font-size:1.15rem;color:var(--blue)}
 .sh-stats span{font-size:.72rem;color:var(--muted)}
+
+/* ---- تمرين / نطق / مراجعة ---- */
+.chip2{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font-size:1rem;font-weight:700;cursor:pointer;direction:ltr;color:var(--text);font-family:inherit}
+.chip2:disabled{opacity:.85;cursor:default}
+.bank,.ans{display:flex;flex-wrap:wrap;gap:6px;direction:ltr;min-height:56px;padding:8px;border-radius:16px}
+.ans{background:var(--bg);border:2px dashed var(--line);margin:10px 0}
+.ans.ok{border-color:var(--ok);background:#dcfce7}.ans.bad{border-color:var(--bad);background:#fee2e2}
+.fb{margin-top:10px;font-weight:800;min-height:1.4em}.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
+.opt.en{direction:ltr;text-align:left}
+.spkrow{background:var(--card);border-radius:18px;padding:12px 14px;margin:8px 0;box-shadow:var(--shadow)}
+.spkrow .top{display:flex;align-items:center;gap:8px}
+.spkrow .en{direction:ltr;text-align:left;font-weight:700;flex:1}
+.res{margin-top:8px}.res:empty{margin:0}
+.res .wds{direction:ltr;text-align:left;font-weight:700;font-size:1.05rem}
+.res .wds .g{color:var(--ok)}.res .wds .r{color:var(--bad);text-decoration:underline}
+.res .pc{font-weight:800;margin-top:4px}
+.mic{background:#ffe5dc}
+.rev{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.btn.sm:disabled{background:#d6d3c8;color:#8d897c}
+.player{margin:-2px 0 12px}
+.player .ratio{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000}
+.player .ratio iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.player a{display:inline-block;margin-top:6px;color:var(--blue);font-weight:700;font-size:.85rem}
 </style>
 </head>
 <body>
@@ -217,6 +240,24 @@ input.txt{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(-
    ===================================================================== */
 const yt = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
 const CHANNEL = "ZAmericanEnglish";
+/* ---- روابط موثّقة من قناة zAmericanEnglish (تحققت منها من صفحات القناة نفسها) ---- */
+const PL = {
+  lvl1:"PLp22-4PivYmIFAnru_L7fnMhSV5YffLTZ",   // كورس شامل من الصفر - المستوى الأول (25 حلقة)
+  read:"PLp22-4PivYmI4PahZ0eyFjcihT7_VAs79",   // كورس القراءة
+  phon:"PLp22-4PivYmIiXGqtQMrfE_tzmqE6r7Tc",   // كورس الصوتيات
+  listen:"PLp22-4PivYmKGwdQda1LVJxE1p7BZYNgJ", // كورس الاستماع
+  conv:"PLp22-4PivYmKp2aC7PI7K0POsf812xLBN",   // كورس المحادثة
+  gram:"PLp22-4PivYmLebd3vD0_WfIteVUlSA44G"    // القواعد وشرح الأزمنة
+};
+const plUrl = id => "https://www.youtube.com/playlist?list=" + id;
+const watchUrl = (v, list) => "https://www.youtube.com/watch?v=" + v + (list ? "&list=" + list : "");
+/* روابط الفيديوهات المباشرة: رقم الدرس ← معرّف الفيديو (الجزء بعد v= في الرابط).
+   لإضافة درس: افتح القائمة، اضغط على الدرس، انسخ المعرّف وضعه هنا. أي درس بدون معرّف يفتح القائمة. */
+const embedLesson = (d) => LESSON_IDS[d]
+  ? "https://www.youtube.com/embed/" + LESSON_IDS[d] + "?list=" + PL.lvl1 + "&rel=0"
+  : "https://www.youtube.com/embed/videoseries?list=" + PL.lvl1 + "&index=" + (d-1) + "&rel=0";
+const LESSON_IDS = { 1:"77IK9T45kiU" };   // المستوى الأول: الحلقة 1 (8:36)
+const PHON_IDS   = { 1:"804e5iDYzSc" };   // كورس الصوتيات: الجزء 1
 const DAYS = 30;
 
 /* ---- الأسابيع (برنامج آدم) ---- */
@@ -270,7 +311,7 @@ const ADAM = [
 /* ---- المستويات ---- */
 const LEVELS = [
  { id:"a1", tag:"A1", next:"A2", name:"البداية", goal:"تحدث عن نفسك في 30 يومًا", sub:"من الصفر إلى أول محادثة", story:ADAM,
-   courseTitle:"كورس المبتدئين من الصفر", courseUrl:yt("zAmericanEnglish تعلم الانجليزية من الصفر للمبتدئين"),
+   courseTitle:"كورس شامل من الصفر — المستوى الأول", courseUrl:plUrl(PL.lvl1),
    tip:"كرّر كل جملة بصوت عالٍ بعد سماعها. النطق أهم من الحفظ.",
    cartoons:[{title:"أغاني الحروف والأرقام",url:yt("ABC phonics song for kids Super Simple Songs")},{title:"كلمات بالصور للمبتدئين",url:yt("learn English vocabulary cartoon for beginners")}],
    podcasts:[{title:"BBC — The English We Speak",url:yt("BBC Learning English The English We Speak")}],
@@ -293,7 +334,7 @@ const LEVELS = [
     {q:"ما معنى Friend؟",o:["عدو","صديق","جار","معلم"],a:1},
     {q:"___ you like coffee?",o:["Does","Do","Is","Are"],a:1}]},
  { id:"a2", tag:"A2", next:"B1", name:"الحياة اليومية", goal:"تحدث عن يومك في 30 يومًا", sub:"الماضي، التسوق، الاتجاهات",
-   courseTitle:"كورس المستوى الثاني", courseUrl:yt("zAmericanEnglish كورس الانجليزية المستوى الثاني الماضي البسيط"),
+   courseTitle:"كورس القواعد وشرح الأزمنة", courseUrl:plUrl(PL.gram),
    tip:"تعلّم 5 أفعال شاذة كل يوم (go → went, eat → ate).",
    cartoons:[{title:"مواقف يومية: تسوق ومطعم",url:yt("English cartoon daily life shopping restaurant dialogue")},{title:"قصص قصيرة مبسطة",url:yt("Learn English through story level 2 animated")}],
    podcasts:[{title:"BBC — 6 Minute English",url:yt("BBC Learning English 6 Minute English")}],
@@ -309,7 +350,7 @@ const LEVELS = [
     {q:"ما معنى Expensive؟",o:["رخيص","غالٍ","كبير","جديد"],a:1},
     {q:"Can I ___ some water, please?",o:["has","have","having","had"],a:1}]},
  { id:"b1", tag:"B1", next:"B2", name:"المتوسط", goal:"سافر وتفاهم في 30 يومًا", sub:"Present Perfect والشروط والسفر",
-   courseTitle:"كورس المستوى المتوسط", courseUrl:yt("zAmericanEnglish كورس المستوى المتوسط انجليزي intermediate"),
+   courseTitle:"كورس الاستماع — تقوية مهارة الاستماع", courseUrl:plUrl(PL.listen),
    tip:"اكتب 3 جمل يوميًا عن يومك بالأزمنة الجديدة؛ الكتابة تثبّت القواعد.",
    cartoons:[{title:"مسلسل بحوارات أطول",url:yt("English animated series intermediate with English subtitles")},{title:"مفردات السفر والمطار",url:yt("English at the airport animated lesson")}],
    podcasts:[{title:"British Council — LearnEnglish Intermediate",url:yt("British Council LearnEnglish Intermediate Podcast")},{title:"English Learning for Curious Minds",url:yt("English Learning for Curious Minds podcast")}],
@@ -341,7 +382,7 @@ const LEVELS = [
     {q:"ما معنى «carry on»؟",o:["يحمل","يستمر","يتوقف","يعود"],a:1},
     {q:"If I had known, I ___ come.",o:["will","would have","would","had"],a:1}]},
  { id:"c1", tag:"C1", next:"C2", name:"الطلاقة والمحادثة", goal:"تحدث بطلاقة في 30 يومًا", sub:"التعابير والمحادثة الطبيعية",
-   courseTitle:"كورس المحادثة والطلاقة", courseUrl:yt("تعلم المحادثة بالانجليزية بطلاقة كورس كامل zAmericanEnglish"),
+   courseTitle:"كورس المحادثة", courseUrl:plUrl(PL.conv),
    tip:"جرّب Shadowing: شغّل جملة، أوقف، وكررها بنفس النبرة والسرعة. 15 دقيقة يوميًا تكفي.",
    cartoons:[{title:"حوارات طبيعية مع ترجمة",url:yt("natural English conversations native speakers with subtitles")},{title:"تعابير Idioms مصوّرة",url:yt("English idioms animated explained")}],
    podcasts:[{title:"BBC — Real Conversations",url:yt("BBC Learning English conversations podcast")},{title:"All Ears English",url:yt("All Ears English podcast")}],
@@ -376,7 +417,7 @@ const CARTOONS = [
    الحالة
    ===================================================================== */
 const KEY = "englishPath.v3";
-const fresh = () => ({done:{}, days:{}, log:{}, seen:{}, name:""});
+const fresh = () => ({done:{}, days:{}, log:{}, seen:{}, ex:{}, srs:{}, name:""});
 let S = load();
 function load(){ try{ return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY))||{}); }catch(e){ return fresh(); } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -414,10 +455,14 @@ function getDay(l, d){
   const wi = weekIdx(d);
   if(l.story){
     const [t, sub, read, words] = l.story[d-1];
-    const w0=words[0][0], w1=words[1][0];
-    return {t, sub, read, words, wk:WEEKS[wi], wi,
-      v:[ {t:"المستوى 1 · الدرس "+d+": "+t, s:"Level 1 · Lesson "+d, ch:CHANNEL, u:yt("zAmericanEnglish المستوى الاول الدرس "+d)},
-          {t:"فيديو مساند: "+t, s:"Support video · "+w0+", "+w1, ch:"YouTube", u:yt("learn English "+w0+" "+w1+" for beginners")} ]};
+    const lesson = d<=25
+      ? {t:"المستوى الأول · الدرس "+d, s:"يُشغَّل هنا داخل التطبيق", ch:CHANNEL, u:LESSON_IDS[d]?watchUrl(LESSON_IDS[d], PL.lvl1):plUrl(PL.lvl1), embed:embedLesson(d)}
+      : {t:"مراجعة المستوى الأول", s:"أعد مشاهدة أي درس لم تتقنه", ch:CHANNEL, u:plUrl(PL.lvl1)};
+    const sup = d<=7 ? ["كورس الصوتيات","phon",PHON_IDS[d]] : d<=14 ? ["كورس القراءة","read"] : d<=21 ? ["كورس الاستماع","listen"] : ["كورس المحادثة","conv"];
+    const support = sup[2]
+      ? {t:"فيديو مساند: "+sup[0], s:"الجزء "+d, ch:CHANNEL, u:watchUrl(sup[2])}
+      : {t:"فيديو مساند: "+sup[0], s:"يفتح القائمة؛ اختر درسًا", ch:CHANNEL, u:plUrl(PL[sup[1]])};
+    return {t, sub, read, words, wk:WEEKS[wi], wi, v:[lesson, support]};
   }
   const half=(d-1)%2, words=l.words.slice(half*5, half*5+5);
   let v2;
@@ -446,6 +491,8 @@ function route(){
   if(page==="level" && byId(id)) renderLevel(id, a||"path");
   else if(page==="day" && byId(id) && +a>=1 && +a<=DAYS) renderDay(id, +a);
   else if(page==="quiz" && byId(id)) startQuiz(id);
+  else if(page==="ex" && byId(id) && +a>=1 && +a<=DAYS) openEx(id, +a);
+  else if(page==="review") startReview();
   else if(page==="explore"){ nav="explore"; renderExplore(); }
   else if(page==="progress"){ nav="progress"; renderProgress(); }
   else if(page==="me"){ nav="me"; renderMe(); }
@@ -542,6 +589,8 @@ function renderHome(){
   const wod=l.words[new Date().getDate()%l.words.length];
   const heroTitle = cd ? `اليوم ${cd}: ${esc(day.t)}` : (passed(l.id) ? "أنهيت هذا المستوى 🎉" : "حان وقت الاختبار النهائي");
   const heroSub = cd ? (day.read ? day.read[0][0] : day.sub) : l.goal;
+  const nDue=dueList().length, nSrs=Object.keys(S.srs).length;
+  const revCard = nSrs ? `<div class="card rev"><div><h3>🔁 مراجعة الكلمات</h3><div class="muted small">${nDue?nDue+" كلمة جاهزة للمراجعة":"لا مراجعة اليوم، أحسنت 🎉"}</div></div><button class="btn sm" id="rv" ${nDue?"":"disabled"}>ابدأ</button></div>` : "";
   view.innerHTML=`
     <div class="top2">
       <div class="who">${mascot(42)}<div><small>${greeting()}</small><b>${esc(S.name||"صديقي")}</b></div></div>
@@ -558,6 +607,7 @@ function renderHome(){
     </div>
     <div class="sec" style="margin-top:6px"><h2>هذا الأسبوع</h2><span class="muted small">🔥 مواظبة ${streak()}</span></div>
     ${weekStrip()}
+    ${revCard}
     <div class="maphead"><h1 style="font-size:1.35rem">مستوياتك</h1><span class="muted small">${LEVELS.filter(x=>passed(x.id)).length} من ${LEVELS.length}</span></div>
     ${levelsMap()}
     <div class="sec"><h2>كلمة اليوم</h2></div>
@@ -569,6 +619,7 @@ function renderHome(){
     </div>`;
   $("#go").onclick=()=>{ location.hash = cd ? "#/day/"+l.id+"/"+cd : (passed(l.id) ? "#/level/"+l.id : "#/quiz/"+l.id); };
   view.querySelectorAll(".lv").forEach(b=>b.onclick=()=>openSheet(+b.dataset.i));
+  const rv=$("#rv"); if(rv) rv.onclick=()=>{ location.hash="#/review"; };
   const cur=view.querySelector(".lv.cur");
   bindCommon();
 }
@@ -647,7 +698,7 @@ function renderDay(id, d){
     <div class="sech"><div class="n">1</div><h2>🎧 الاستماع</h2></div>
     <p class="note">شاهد الفيديوهين بالترتيب. يفتح الفيديو في يوتيوب، ارجع إلى هنا بعد المشاهدة.</p>
     ${g.v.map((v,k)=>`<div class="vid ${seen[k]?"seen":""}" data-k="${k}"><div class="vt"><div class="vn">${esc(v.t)}</div><div class="vs">${esc(v.s)}</div><div class="vc">${esc(v.ch)}</div></div>
-      <a class="play" href="${esc(v.u)}" target="_blank" rel="noopener" data-k="${k}" aria-label="شغّل">${seen[k]?"✓":"▶"}</a></div>`).join("")}
+      <a class="play" href="${esc(v.u)}" target="_blank" rel="noopener" data-k="${k}" aria-label="شغّل">${seen[k]?"✓":"▶"}</a></div>${v.embed?`<div class="player" id="pl${k}" hidden></div>`:""}`).join("")}
 
     ${g.read?`<div class="sech"><div class="n">2</div><h2>📖 القراءة</h2></div><p class="note">اضغط على الجملة لترى الترجمة، وعلى 🔊 لتسمعها.</p>`+
       g.read.map(([en,ar])=>`<div class="sent"><div class="top"><div class="en">${esc(en)}</div><button class="spk sm" data-say="${esc(en)}" aria-label="استمع">🔊</button></div><div class="ar">${esc(ar)}</div></div>`).join(""):""}
@@ -656,33 +707,213 @@ function renderDay(id, d){
     <div class="words">${g.words.map(([en,ar])=>`<div class="word"><button class="spk" data-say="${esc(en)}" aria-label="استمع">🔊</button><b>${esc(en)}</b><span>${esc(ar)}</span></div>`).join("")}</div>
 
     <div class="sech"><div class="n">${g.read?4:3}</div><h2>🗣️ التحدث</h2></div>
-    <div class="card"><p style="margin-top:0">${g.read?"استمع للجمل كاملة ثم كررها بصوتك، جملة جملة، حتى تنطقها بسلاسة.":"انطق الكلمات الخمس بصوت عالٍ ثلاث مرات، ثم ركّب بها جملة من عندك."}</p>
-      <button class="btn ghost" id="sayAll" style="margin-top:0">🔊 ${g.read?"استمع للجمل":"استمع للكلمات"}</button></div>
+    <p class="note">استمع 🔊 ثم اضغط 🎤 وانطق ${g.read?"الجملة":"الكلمة"}؛ سأقارن ما سمعته بالنص وألوّن لك الكلمات التي تحتاج تدريب.</p>
+    ${(g.read?g.read.map(r=>r[0]):g.words.map(w=>w[0])).map(t=>`<div class="spkrow" data-t="${esc(t)}"><div class="top"><div class="en">${esc(t)}</div><button class="spk sm" data-say="${esc(t)}" aria-label="استمع">🔊</button><button class="spk sm mic" data-mic aria-label="انطق">🎤</button></div><div class="res"></div></div>`).join("")}
+    <div class="card"><button class="btn ghost" id="sayAll" style="margin-top:0">🔊 ${g.read?"استمع للجمل كاملة":"استمع للكلمات"}</button></div>
 
     <div class="dock"><button class="btn" id="finish"></button></div>`;
 
-  const dock=$("#finish");
+  const dock=$("#finish"), exKey=id+":"+d;
   function refresh(){
-    const s=seenArr(id,d), both=s[0]&&s[1];
+    const sn=seenArr(id,d), both=sn[0]&&sn[1], exDone=!!S.ex[exKey];
     if(isDone){ dock.textContent = d<DAYS ? "✓ تم — اليوم التالي ←" : "✓ تم — العودة للمسار"; dock.disabled=false; dock.className="btn ok"; }
     else if(!both){ dock.textContent="شاهد الفيديوهين أولاً"; dock.disabled=true; dock.className="btn"; }
+    else if(!exDone){ dock.textContent="🧩 ابدأ تمرين اليوم"; dock.disabled=false; dock.className="btn"; }
     else { dock.textContent="✅ أنهيت اليوم "+d; dock.disabled=false; dock.className="btn ok"; }
   }
   refresh();
-  view.querySelectorAll(".play").forEach(a=>a.addEventListener("click",()=>{
-    const k=+a.dataset.k; markSeen(id,d,k);
+  view.querySelectorAll(".play").forEach(a=>a.addEventListener("click",e=>{
+    const k=+a.dataset.k, v=g.v[k]; markSeen(id,d,k);
     a.textContent="✓"; a.closest(".vid").classList.add("seen"); refresh();
+    if(v.embed){
+      e.preventDefault();
+      const box=$("#pl"+k);
+      if(!box.hidden){ box.hidden=true; box.innerHTML=""; return; }
+      box.innerHTML=`<div class="ratio"><iframe src="${esc(v.embed)}" title="${esc(v.t)}" allow="accelerated-2d-canvas; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><a href="${esc(v.u)}" target="_blank" rel="noopener">لا يعمل هنا؟ افتحه على يوتيوب ↗</a>`;
+      box.hidden=false;
+    }
   }));
-  view.querySelectorAll(".sent").forEach(s=>s.onclick=e=>{ if(e.target.closest(".spk")) return; s.classList.toggle("show"); });
+  view.querySelectorAll(".sent").forEach(x=>x.onclick=e=>{ if(e.target.closest(".spk")) return; x.classList.toggle("show"); });
+  view.querySelectorAll("[data-mic]").forEach(m=>m.onclick=()=>micTry(m.closest(".spkrow")));
   $("#sayAll").onclick=()=>speak(g.read ? g.read.map(r=>r[0]).join(" ") : g.words.map(w=>w[0]).join(". "));
   dock.onclick=()=>{
     if(dock.disabled) return;
     if(isDone){ location.hash = d<DAYS ? "#/day/"+id+"/"+(d+1) : "#/level/"+id; return; }
-    completeDay(id,d);
+    if(!S.ex[exKey]){ location.hash="#/ex/"+id+"/"+d; return; }
+    completeDay(id,d); addSrs(l,d);
     if(d===DAYS) toast("أنهيت الـ 30 يومًا! الاختبار النهائي مفتوح 🏁"); else toast("أحسنت! 🔥 مواظبة "+streak());
     location.hash="#/level/"+id;
   };
   bindCommon();
+}
+
+/* =====================================================================
+   مراجعة متباعدة (Leitner)
+   ===================================================================== */
+const INTERVALS=[1,3,7,14,30];
+const addDays=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return dkey(d); };
+const uniq=a=>[...new Set(a)];
+function addSrs(l,d){
+  getDay(l,d).words.forEach(w=>{ const k=l.id+"|"+w[0]; if(!S.srs[k]) S.srs[k]={en:w[0],ar:w[1],box:0,due:addDays(1)}; });
+  save();
+}
+const dueList=()=>Object.keys(S.srs).filter(k=>S.srs[k].due<=dkey());
+let RV=null;
+function startReview(){
+  const keys=shuffle(dueList()).slice(0,8);
+  if(!keys.length){ toast("لا كلمات للمراجعة اليوم 🎉"); location.hash="#/"; return; }
+  RV={keys,i:0,ok:0,locked:false}; drawReview();
+}
+function drawReview(){
+  if(RV.i>=RV.keys.length){
+    S.log[dkey()]=true; save();
+    view.innerHTML=`<div class="card"><div class="big">${RV.ok>=RV.keys.length*0.75?"🎉":"💪"}</div><h1 class="center">${RV.ok} / ${RV.keys.length}</h1>
+      <p class="center">${RV.ok===RV.keys.length?"ما شاء الله، كلها صح!":"الكلمات الخاطئة سترجع لك غدًا."}</p>
+      <a class="btn ok" href="#/">الرئيسية</a>${dueList().length?`<button class="btn ghost" id="more">راجع كلمات أخرى (${dueList().length})</button>`:""}</div>`;
+    const m=$("#more"); if(m) m.onclick=startReview; return;
+  }
+  RV.locked=false;
+  const key=RV.keys[RV.i], w=S.srs[key];
+  const pool=LEVELS.flatMap(l=>l.words);
+  const others=uniq(shuffle(pool).map(x=>x[1]).filter(v=>v!==w.ar)).slice(0,3);
+  const o=shuffle([w.ar,...others]);
+  view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a>
+    <div class="card"><div class="muted small">مراجعة الكلمات · ${RV.i+1} من ${RV.keys.length}</div>
+      <div class="bar"><i style="width:${RV.i/RV.keys.length*100}%"></i></div>
+      <div class="wod" style="margin:14px 0"><b style="font-size:1.6rem">${esc(w.en)}</b><button class="spk" data-say="${esc(w.en)}" aria-label="استمع">🔊</button></div>
+      <div class="muted small">ما معنى هذه الكلمة؟</div>
+      ${o.map((t,k)=>`<button class="opt" data-k="${k}">${esc(t)}</button>`).join("")}
+      <button class="btn" id="nx" style="display:none">${RV.i===RV.keys.length-1?"النتيجة":"التالي"}</button></div>`;
+  speak(w.en);
+  view.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say));
+  view.querySelectorAll(".opt").forEach((b,idx)=>b.onclick=()=>{
+    if(RV.locked) return; RV.locked=true;
+    const ok=o[idx]===w.ar;
+    view.querySelectorAll(".opt").forEach((x,j)=>{ x.disabled=true; if(o[j]===w.ar) x.classList.add("right"); else if(j===idx) x.classList.add("wrong"); });
+    if(ok){ RV.ok++; w.box=Math.min(w.box+1,4); w.due=addDays(INTERVALS[w.box]); } else { w.box=0; w.due=addDays(1); }
+    save(); $("#nx").style.display="block";
+  });
+  $("#nx").onclick=()=>{ RV.i++; drawReview(); };
+}
+
+/* =====================================================================
+   تمرين اليوم
+   ===================================================================== */
+let EX=null;
+function makeExercises(l,d){
+  const g=getDay(l,d), pool=l.words, items=[];
+  const opts=(w,key)=>{ const others=uniq(shuffle(pool).map(x=>x[key]).filter(v=>v!==w[key])).slice(0,3); return shuffle([w[key],...others]); };
+  const mcqAr=w=>({t:"mcq",q:"ما معنى «"+w[0]+"»؟",o:opts(w,1),a:w[1],say:w[0]});
+  const mcqEn=w=>({t:"mcq",q:"كيف تقول «"+w[1]+"» بالإنجليزية؟",o:opts(w,0),a:w[0],ltr:true});
+  const ws=shuffle(g.words);
+  items.push(mcqAr(ws[0]), mcqEn(ws[1]));
+  if(g.read){
+    const sents=shuffle(g.read);
+    const ordS=sents.find(s=>{const n=s[0].split(" ").length; return n>=3&&n<=8;})||sents[0];
+    items.push({t:"order",ar:ordS[1],tokens:ordS[0].split(" "),a:ordS[0]});
+    const low=w=>/^[a-z]{2,}$/.test(w), strip=w=>w.replace(/[.,!?]$/,"");
+    let fill=null;
+    for(const s of sents){
+      const tk=s[0].split(" "), cand=tk.map((w,i)=>({w:strip(w),i})).filter(o=>o.i>0&&low(o.w));
+      if(cand.length){ fill={s,tk,c:cand[Math.floor(Math.random()*cand.length)]}; break; }
+    }
+    if(fill){
+      const bank=uniq([...g.read.flatMap(r=>r[0].split(" ").map(strip)),...pool.map(w=>w[0])].filter(w=>low(w)&&w!==fill.c.w));
+      const o=shuffle([fill.c.w,...shuffle(bank).slice(0,3)]);
+      const shown=fill.tk.map((w,i)=>i===fill.c.i?"_____"+(/[.,!?]$/.test(w)?w.slice(-1):""):w).join(" ");
+      items.push({t:"fill",q:shown,ar:fill.s[1],o,a:fill.c.w});
+    } else items.push(mcqAr(ws[2]));
+  } else items.push(mcqAr(ws[2]), mcqEn(ws[3]));
+  return items;
+}
+function openEx(id,d){
+  const i=idxOf(id);
+  if(!levelUnlocked(i) || !dayUnlocked(id,d)){ location.hash="#/level/"+id; return; }
+  EX={id,d,i:0,score:0,items:makeExercises(byId(id),d)}; drawEx();
+}
+function drawEx(){
+  if(EX.i>=EX.items.length) return exResult();
+  const it=EX.items[EX.i], last=EX.i===EX.items.length-1;
+  const head=`<a class="back" href="#/day/${EX.id}/${EX.d}">→ اليوم ${EX.d}</a>
+    <div class="card"><div class="muted small">تمرين اليوم ${EX.d} · ${EX.i+1} من ${EX.items.length}</div>
+    <div class="bar"><i style="width:${EX.i/EX.items.length*100}%"></i></div>`;
+  let body="";
+  if(it.t==="mcq") body=`<div class="q">${esc(it.q)}</div>`+it.o.map((o,k)=>`<button class="opt ${it.ltr?"en":""}" data-k="${k}">${esc(o)}</button>`).join("");
+  else if(it.t==="fill") body=`<div class="muted small">أكمل الجملة:</div><div class="q ltr">${esc(it.q)}</div><div class="muted small" style="margin:-6px 0 8px">${esc(it.ar)}</div>`+it.o.map((o,k)=>`<button class="opt en" data-k="${k}">${esc(o)}</button>`).join("");
+  else body=`<div class="muted small">رتّب الجملة بالإنجليزية:</div><div class="q" style="margin-bottom:4px">${esc(it.ar)}</div><div class="ans" id="ans"></div><div class="bank" id="bank"></div><button class="btn" id="chk" disabled>تحقق</button>`;
+  view.innerHTML=head+body+`<div class="fb" id="fb"></div><button class="btn" id="nx" style="display:none">${last?"النتيجة":"التالي"}</button></div>`;
+  let locked=false;
+  const finish=(ok,msg)=>{ locked=true; if(ok) EX.score++; const fb=$("#fb"); fb.className="fb "+(ok?"ok":"bad"); fb.textContent=msg; $("#nx").style.display="block"; };
+  if(it.t==="mcq"||it.t==="fill"){
+    view.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{
+      if(locked) return;
+      const ok=it.o[k]===it.a;
+      view.querySelectorAll(".opt").forEach((x,j)=>{ x.disabled=true; if(it.o[j]===it.a) x.classList.add("right"); else if(j===k) x.classList.add("wrong"); });
+      if(it.say) speak(it.say);
+      finish(ok, ok?"صحيح! ✓":"الجواب الصحيح: "+it.a);
+    });
+  } else {
+    let tk=it.tokens.map((w,i)=>({id:i,w})), bank, tries=0;
+    do{ bank=shuffle(tk); tries++; }while(tk.length>1 && bank.map(x=>x.w).join(" ")===it.a && tries<6);
+    let ans=[];
+    const draw=()=>{
+      $("#ans").innerHTML=ans.map(x=>`<button class="chip2" data-a="${x.id}">${esc(x.w)}</button>`).join("");
+      $("#bank").innerHTML=bank.map(x=>`<button class="chip2" data-b="${x.id}">${esc(x.w)}</button>`).join("");
+      $("#chk").disabled = bank.length>0 || locked;
+      view.querySelectorAll("[data-b]").forEach(b=>b.onclick=()=>{ if(locked) return; const x=bank.find(y=>y.id==b.dataset.b); bank=bank.filter(y=>y!==x); ans.push(x); draw(); });
+      view.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{ if(locked) return; const x=ans.find(y=>y.id==b.dataset.a); ans=ans.filter(y=>y!==x); bank.push(x); draw(); });
+    };
+    draw();
+    $("#chk").onclick=()=>{
+      if(locked) return;
+      const got=ans.map(x=>x.w).join(" "), ok=got===it.a;
+      $("#ans").classList.add(ok?"ok":"bad"); speak(it.a);
+      view.querySelectorAll(".chip2").forEach(c=>c.disabled=true); $("#chk").disabled=true;
+      finish(ok, ok?"صحيح! ✓":"الصحيح: "+it.a);
+    };
+  }
+  $("#nx").onclick=()=>{ EX.i++; drawEx(); };
+}
+function exResult(){
+  const ok=EX.score>=3, key=EX.id+":"+EX.d;
+  if(ok){ S.ex[key]=true; save(); }
+  view.innerHTML=`<div class="card"><div class="big">${ok?"🎉":"💪"}</div><h1 class="center">${EX.score} / ${EX.items.length}</h1>
+    <p class="center">${ok?"أحسنت! فُتح زر «أنهيت اليوم».":"تحتاج 3 إجابات صحيحة على الأقل. راجع كلمات اليوم وأعد المحاولة."}</p>
+    ${ok?`<a class="btn ok" href="#/day/${EX.id}/${EX.d}">العودة لليوم ${EX.d}</a>`:`<button class="btn" id="again">🔁 أعد التمرين</button><a class="btn ghost" href="#/day/${EX.id}/${EX.d}">راجع الدرس</a>`}</div>`;
+  const a=$("#again"); if(a) a.onclick=()=>openEx(EX.id,EX.d);
+}
+
+/* =====================================================================
+   تدريب النطق (Web Speech API)
+   ===================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const NUMW={"0":"zero","1":"one","2":"two","3":"three","4":"four","5":"five","6":"six","7":"seven","8":"eight","9":"nine","10":"ten","11":"eleven","12":"twelve","13":"thirteen","14":"fourteen","15":"fifteen","16":"sixteen","17":"seventeen","18":"eighteen","19":"nineteen","20":"twenty","30":"thirty","40":"forty","50":"fifty","60":"sixty"};
+const normW=t=>t.toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(Boolean).map(w=>NUMW[w]||w);
+function scoreSpeech(target, alts){
+  const tw=target.split(" ").map(w=>({raw:w,n:normW(w)[0]||""}));
+  let best=null;
+  alts.forEach(a=>{
+    const set=new Set(normW(a)), marks=tw.map(x=>x.n===""||set.has(x.n)), c=marks.filter(Boolean).length;
+    if(!best||c>best.c) best={c,marks,heard:a};
+  });
+  return {pct:Math.round(best.c/tw.length*100), marks:best.marks, tw, heard:best.heard};
+}
+function showSpeech(res, sc){
+  const msg = sc.pct>=85?"ممتاز! نطقك واضح 👏":sc.pct>=50?"جيد، كرر الكلمات الحمراء":"حاول مرة ثانية ببطء";
+  res.innerHTML=`<div class="wds">${sc.tw.map((x,i)=>`<span class="${sc.marks[i]?"g":"r"}">${esc(x.raw)}</span>`).join(" ")}</div>
+    <div class="pc">${sc.pct}% · ${msg}</div><div class="note" style="direction:ltr;text-align:left">سمعتك: “${esc(sc.heard)}”</div>`;
+}
+function micTry(row){
+  const target=row.dataset.t, res=row.querySelector(".res"), btn=row.querySelector("[data-mic]");
+  if(!SR){ res.innerHTML=`<div class="note">متصفحك لا يدعم التعرّف على الصوت. جرّب Chrome على الجوال أو الكمبيوتر.</div>`; return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  let got=false;
+  const r=new SR(); r.lang="en-US"; r.interimResults=false; r.maxAlternatives=3;
+  btn.disabled=true; res.innerHTML=`<div class="note">🎙️ تكلّم الآن...</div>`;
+  r.onresult=e=>{ got=true; showSpeech(res, scoreSpeech(target, Array.from(e.results[0]).map(x=>x.transcript))); };
+  r.onerror=e=>{ got=true; res.innerHTML=`<div class="note">${e.error==="not-allowed"?"اسمح للمتصفح باستخدام المايكروفون ثم أعد المحاولة.":e.error==="no-speech"?"ما سمعت شيئاً، حاول مرة ثانية.":"تعذّر التسجيل، حاول مجددًا."}</div>`; };
+  r.onend=()=>{ btn.disabled=false; if(!got) res.innerHTML=`<div class="note">ما سمعت شيئاً، حاول مرة ثانية.</div>`; };
+  try{ r.start(); }catch(e){ btn.disabled=false; res.innerHTML=`<div class="note">تعذّر بدء التسجيل.</div>`; }
 }
 
 /* =====================================================================
