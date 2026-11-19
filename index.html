@@ -97,6 +97,7 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .node.cur{background:none;padding:0;position:relative;width:78px;height:78px;box-shadow:0 0 0 4px #fff,0 0 0 7px var(--blue-l);border-radius:50%}
 .here{position:absolute;top:-38px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:3px 12px;border-radius:10px;font-size:.8rem;font-weight:700;white-space:nowrap}
 .here:after{content:"";position:absolute;bottom:-5px;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:var(--text);border-bottom:0}
+.pn:has(.node.cur){margin-top:46px}
 .pl{text-align:center;margin-top:6px;max-width:170px}
 .pl b{display:block;font-size:.85rem}.pl span{font-size:.8rem;color:var(--muted)}
 .final{background:linear-gradient(135deg,#ff6a3d,#ff3d77)}
@@ -308,6 +309,56 @@ const ADAM = [
  ["تحدث لدقيقة","التحضير للاختبار النهائي",[["Hello, my name is Adam.","مرحبًا، اسمي آدم."],["I speak a little English.","أتحدث القليل من الإنجليزية."],["I want to learn more every day.","أريد أن أتعلم أكثر كل يوم."],["Thank you for listening!","شكرًا لاستماعك!"]],[["Speak","يتحدث"],["Learn","يتعلم"],["More","أكثر"],["Listen","يستمع"],["A little","قليلًا"]]]
 ];
 
+/* ---- المستوى A2: 30 يومًا (الماضي، الخطط، الصحة، المطعم) ---- */
+const WEEKS2 = [
+ {en:"YESTERDAY",   ar:"أمس",                 say:"Yesterday I woke up early. I went to the university and I studied English.", sayAr:"أمس استيقظت مبكرًا. ذهبت إلى الجامعة ودرست الإنجليزية."},
+ {en:"THE WEEKEND", ar:"عطلة نهاية الأسبوع",  say:"Last weekend I visited my grandmother. We ate tajine and we talked.",         sayAr:"في عطلة نهاية الأسبوع الماضية زرت جدتي. أكلنا الطاجين وتحدثنا."},
+ {en:"MY PLANS",    ar:"خططي وسفري",          say:"Tomorrow I am going to travel. I will take the train to Marrakech.",          sayAr:"غدًا سأسافر. سآخذ القطار إلى مراكش."},
+ {en:"HEALTH & FOOD", ar:"الصحة والمطعم",     say:"I have a headache. I need to see a doctor.",                                   sayAr:"عندي صداع. أحتاج أن أرى طبيبًا."},
+ {en:"REVIEW",      ar:"مراجعة وتحدث",        say:"Last week I went to Casablanca. Next month I am going to travel to Marrakech.", sayAr:"الأسبوع الماضي ذهبت إلى الدار البيضاء. الشهر القادم سأسافر إلى مراكش."}
+];
+const ADAM2 = [
+ /* الأسبوع 1: أمس */
+ ["أمس صباحًا","الماضي البسيط: الروتين",[["Yesterday I woke up at six.","أمس استيقظت في السادسة."],["I brushed my teeth and I had breakfast.","نظفت أسناني وتناولت الفطور."],["Then I took the bus to the university.","ثم ركبت الحافلة إلى الجامعة."],["I was not late.","لم أتأخر."]],[["Yesterday","أمس"],["Woke up","استيقظ"],["Took","أخذ / ركب"],["Had","تناول / كان لديه"],["Then","ثم"]]],
+ ["في الجامعة أمس","الدراسة في الماضي",[["I studied English for two hours.","درست الإنجليزية لمدة ساعتين."],["My teacher gave us homework.","أعطانا أستاذي واجبًا."],["We wrote ten sentences.","كتبنا عشر جمل."],["I understood the lesson.","فهمت الدرس."]],[["Studied","درس"],["Gave","أعطى"],["Wrote","كتب"],["Understood","فهم"],["Two hours","ساعتان"]]],
+ ["الغداء مع الأصدقاء","أكلنا وتمشينا",[["At noon, I met my friends.","عند الظهر قابلت أصدقائي."],["We ate chicken and rice.","أكلنا دجاجًا وأرزًا."],["Karim paid for the lunch.","دفع كريم ثمن الغداء."],["After that, we walked in the park.","بعد ذلك تمشينا في الحديقة."]],[["Met","قابل"],["Ate","أكل"],["Paid","دفع"],["Walked","مشى"],["After that","بعد ذلك"]]],
+ ["مساء أمس","في البيت",[["I came home at five.","وصلت البيت في الخامسة."],["I helped my mother in the kitchen.","ساعدت أمي في المطبخ."],["We cooked dinner together.","طبخنا العشاء معًا."],["Then I watched a film.","ثم شاهدت فيلمًا."]],[["Came","جاء"],["Helped","ساعد"],["Cooked","طبخ"],["Watched","شاهد"],["Dinner","عشاء"]]],
+ ["ما فعلته وما لم أفعله","النفي في الماضي",[["I didn't sleep well last night.","لم أنم جيدًا الليلة الماضية."],["I didn't have time for lunch.","لم يكن عندي وقت للغداء."],["My brother didn't call me.","لم يتصل بي أخي."],["Did you sleep well?","هل نمت جيدًا؟"]],[["Didn't","لم (للماضي)"],["Last night","الليلة الماضية"],["Time","وقت"],["Sleep well","ينام جيدًا"],["Answer","يجيب"]]],
+ ["أسئلة الماضي","Did you ...؟",[["Did you go to the market yesterday?","هل ذهبت إلى السوق أمس؟"],["Yes, I did.","نعم، ذهبت."],["No, I didn't.","لا، لم أذهب."],["What did you buy?","ماذا اشتريت؟"]],[["Did you","هل (للماضي)"],["Yes, I did","نعم فعلت"],["No, I didn't","لا لم أفعل"],["What","ماذا"],["Buy","يشتري"]]],
+ ["مراجعة الأسبوع الأول","احكِ عن أمسك",[["Yesterday was a long day.","كان أمس يومًا طويلًا."],["I woke up early and went to the university.","استيقظت مبكرًا وذهبت إلى الجامعة."],["I studied, I ate with friends, and I came home.","درست وأكلت مع أصدقائي ورجعت إلى البيت."],["I was tired but happy.","كنت متعبًا لكن سعيدًا."]],[["Long","طويل"],["Tired","متعب"],["Happy","سعيد"],["But","لكن"],["Early","مبكرًا"]]],
+
+ /* الأسبوع 2: عطلة نهاية الأسبوع */
+ ["مباراة السبت","الرياضة والفوز",[["Last Saturday, I played football.","يوم السبت الماضي لعبت كرة القدم."],["My team won the match.","فاز فريقي بالمباراة."],["We scored three goals.","سجّلنا ثلاثة أهداف."],["I felt very proud.","شعرت بفخر كبير."]],[["Last Saturday","السبت الماضي"],["Won","فاز"],["Scored","سجّل"],["Match","مباراة"],["Proud","فخور"]]],
+ ["إلى الدار البيضاء","السفر بالقطار",[["On Sunday, we went to Casablanca.","يوم الأحد ذهبنا إلى الدار البيضاء."],["We took the train at nine.","ركبنا القطار في التاسعة."],["My grandmother was very happy.","كانت جدتي سعيدة جدًا."],["She made a delicious tajine.","حضّرت طاجينًا لذيذًا."]],[["Train","قطار"],["Went","ذهب"],["Made","صنع / حضّر"],["Delicious","لذيذ"],["Was","كان"]]],
+ ["في القطار","وصف ما رأيت",[["The train was full.","كان القطار ممتلئًا."],["I sat next to a young woman.","جلست بجانب شابة."],["She was reading a book.","كانت تقرأ كتابًا."],["We talked about the city.","تحدثنا عن المدينة."]],[["Full","ممتلئ"],["Sat","جلس"],["Next to","بجانب"],["Young","شاب"],["About","عن"]]],
+ ["الصور والذكريات","الإرسال والضحك",[["I took many photos.","التقطت صورًا كثيرة."],["I sent them to my friends.","أرسلتها إلى أصدقائي."],["My sister laughed at one photo.","ضحكت أختي من إحدى الصور."],["It was a funny day.","كان يومًا مضحكًا."]],[["Photo","صورة"],["Sent","أرسل"],["Laughed","ضحك"],["Funny","مضحك"],["Many","كثير"]]],
+ ["الطقس","مشمس وماطر",[["It was sunny in the morning.","كان الجو مشمسًا في الصباح."],["In the afternoon it rained.","بعد الظهر أمطرت."],["We stayed inside and played cards.","بقينا في الداخل ولعبنا الورق."],["The weather changes fast.","الطقس يتغير بسرعة."]],[["Sunny","مشمس"],["Rained","أمطرت"],["Stayed","بقي"],["Weather","طقس"],["Hot","حار"]]],
+ ["عندما كنت صغيرًا","ذكريات الطفولة",[["When I was a child, I lived in a small house.","عندما كنت طفلًا سكنت في بيت صغير."],["I played in the street with my cousins.","لعبت في الشارع مع أبناء عمومتي."],["We were always happy.","كنا سعداء دائمًا."],["Those were good days.","كانت أيامًا جميلة."]],[["Child","طفل"],["Cousin","ابن العم / الخال"],["Always","دائمًا"],["Small","صغير"],["Good days","أيام جميلة"]]],
+ ["مراجعة الأسبوع الثاني","احكِ عن عطلتك",[["Last weekend I visited my grandmother.","في عطلة نهاية الأسبوع الماضية زرت جدتي."],["We ate tajine and talked for hours.","أكلنا الطاجين وتحدثنا لساعات."],["I took photos and sent them to my friends.","التقطت صورًا وأرسلتها إلى أصدقائي."],["It was a wonderful weekend.","كانت عطلة رائعة."]],[["Wonderful","رائع"],["Weekend","عطلة نهاية الأسبوع"],["Hours","ساعات"],["Visited","زار"],["Talked","تحدث"]]],
+
+ /* الأسبوع 3: خططي وسفري */
+ ["غدًا","going to: خطط قريبة",[["Tomorrow I am going to study.","غدًا سأدرس."],["My friend is going to visit me.","صديقي سيزورني."],["We are going to cook pasta.","سنطبخ معكرونة."],["I am so excited!","أنا متحمس جدًا!"]],[["Tomorrow","غدًا"],["Going to","سوف (خطة)"],["Visit","يزور"],["Pasta","معكرونة"],["Excited","متحمس"]]],
+ ["الصيف القادم","will: قرارات المستقبل",[["Next summer, I am going to travel.","الصيف القادم سأسافر."],["I am going to visit Marrakech.","سأزور مراكش."],["I will take the train.","سآخذ القطار."],["I will stay at a small hotel.","سأقيم في فندق صغير."]],[["Next summer","الصيف القادم"],["Travel","يسافر"],["Marrakech","مراكش"],["Stay","يقيم"],["Hotel","فندق"]]],
+ ["حجز التذاكر","الأسعار والدفع",[["I want to buy a ticket to Marrakech.","أريد شراء تذكرة إلى مراكش."],["How much is it?","بكم هي؟"],["It is two hundred dirhams.","مئتا درهم."],["I will pay by card.","سأدفع بالبطاقة."]],[["Ticket","تذكرة"],["Pay","يدفع"],["Card","بطاقة"],["Hundred","مئة"],["Book","يحجز"]]],
+ ["تجهيز الحقيبة","ماذا سآخذ؟",[["I need to pack my bag.","أحتاج أن أجهّز حقيبتي."],["I will take two shirts and a jacket.","سآخذ قميصين وسترة."],["I will not forget my passport.","لن أنسى جواز سفري."],["My mother will help me.","ستساعدني أمي."]],[["Pack","يجهّز الحقيبة"],["Passport","جواز سفر"],["Forget","ينسى"],["Need","يحتاج"],["Jacket","سترة"]]],
+ ["في الفندق","تسجيل الوصول",[["I have a reservation.","عندي حجز."],["My name is Adam Benali.","اسمي آدم بنعلي."],["Can I have a room with a view?","هل أستطيع غرفة بإطلالة؟"],["Breakfast is at seven.","الفطور في السابعة."]],[["Reservation","حجز"],["Key","مفتاح"],["View","إطلالة"],["Floor","طابق"],["Check in","يسجّل الوصول"]]],
+ ["أسئلة عن المستقبل","ماذا ستفعل؟",[["What are you going to do tomorrow?","ماذا ستفعل غدًا؟"],["Where will you go next year?","أين ستذهب السنة القادمة؟"],["I hope I will speak English fluently.","آمل أن أتحدث الإنجليزية بطلاقة."],["I will practice every day.","سأتدرب كل يوم."]],[["Hope","يأمل"],["Fluently","بطلاقة"],["Practice","يتدرب"],["Next year","السنة القادمة"],["Will","سوف"]]],
+ ["مراجعة الأسبوع الثالث","احكِ عن خططك",[["Tomorrow I am going to travel.","غدًا سأسافر."],["I will take the train to Marrakech.","سآخذ القطار إلى مراكش."],["I will stay in a small hotel.","سأقيم في فندق صغير."],["I will send you photos.","سأرسل لك صورًا."]],[["Plan","خطة"],["Trip","رحلة"],["Train","قطار"],["Photos","صور"],["Send","يرسل"]]],
+
+ /* الأسبوع 4: الصحة والمطعم */
+ ["عندي صداع","الأعراض",[["I have a headache.","عندي صداع."],["My throat hurts.","حلقي يؤلمني."],["I think I am sick.","أظن أنني مريض."],["I need to see a doctor.","أحتاج أن أرى طبيبًا."]],[["Headache","صداع"],["Throat","حلق"],["Sick","مريض"],["Doctor","طبيب"],["Hurts","يؤلم"]]],
+ ["عند الطبيب","الوصفة والنصيحة",[["What is the problem?","ما المشكلة؟"],["I have a fever and a cough.","عندي حرارة وسعال."],["Take this medicine twice a day.","خذ هذا الدواء مرتين في اليوم."],["Drink a lot of water and rest.","اشرب ماءً كثيرًا واسترح."]],[["Fever","حمى"],["Cough","سعال"],["Medicine","دواء"],["Rest","يرتاح"],["Twice a day","مرتين يوميًا"]]],
+ ["في الصيدلية","شراء الدواء",[["Do you have something for a cold?","هل عندكم شيء للزكام؟"],["Here is a syrup.","هذا شراب."],["How many times a day?","كم مرة في اليوم؟"],["Three times, after meals.","ثلاث مرات بعد الوجبات."]],[["Syrup","شراب (دواء)"],["A cold","زكام"],["Meal","وجبة"],["Times","مرات"],["Something","شيء"]]],
+ ["في المطعم","الطلب",[["A table for two, please.","طاولة لشخصين من فضلك."],["Can I see the menu?","هل أستطيع رؤية قائمة الطعام؟"],["I would like grilled fish.","أريد سمكًا مشويًا."],["The bill, please.","الفاتورة من فضلك."]],[["Menu","قائمة الطعام"],["Grilled fish","سمك مشوي"],["Bill","فاتورة"],["I would like","أودّ"],["A table","طاولة"]]],
+ ["رأيي في الوجبة","وصف الطعام والخدمة",[["The soup was too hot.","كان الحساء ساخنًا جدًا."],["The fish was delicious.","كان السمك لذيذًا."],["The service was slow.","كانت الخدمة بطيئة."],["But the waiter was very kind.","لكن النادل كان لطيفًا جدًا."]],[["Soup","حساء"],["Service","خدمة"],["Slow","بطيء"],["Waiter","نادل"],["Too","جدًا (أكثر من اللازم)"]]],
+ ["مكالمة هاتفية","ترك رسالة",[["Hello, can I speak to Karim?","مرحبًا، هل أستطيع التحدث إلى كريم؟"],["He is not here right now.","ليس هنا الآن."],["Can I leave a message?","هل أستطيع ترك رسالة؟"],["I will call you back later.","سأعاود الاتصال بك لاحقًا."]],[["Speak to","يتحدث إلى"],["Leave a message","يترك رسالة"],["Right now","الآن"],["Call back","يعاود الاتصال"],["Later","لاحقًا"]]],
+ ["مراجعة الأسبوع الرابع","احكِ عن مرضك",[["Yesterday I had a headache.","أمس كان عندي صداع."],["I went to the doctor and took medicine.","ذهبت إلى الطبيب وتناولت الدواء."],["Today I feel much better.","اليوم أشعر بتحسن كبير."],["Thank you for asking.","شكرًا على سؤالك."]],[["Better","أفضل"],["Feel","يشعر"],["Take medicine","يتناول الدواء"],["Ask","يسأل"],["Much","كثيرًا"]]],
+
+ /* الأسبوع 5: مراجعة */
+ ["قصتي: ماضٍ ومستقبل","اربط ما تعلمته",[["Last week I went to Casablanca.","الأسبوع الماضي ذهبت إلى الدار البيضاء."],["I visited my grandmother and ate tajine.","زرت جدتي وأكلت الطاجين."],["Next month I am going to travel to Marrakech.","الشهر القادم سأسافر إلى مراكش."],["I will practice English every day.","سأتدرب على الإنجليزية كل يوم."]],[["Last week","الأسبوع الماضي"],["Next month","الشهر القادم"],["Past","ماضٍ"],["Future","مستقبل"],["Every day","كل يوم"]]],
+ ["تحدث لدقيقتين","التحضير للاختبار النهائي",[["Hello, my name is Adam, and I am a student from Rabat.","مرحبًا، اسمي آدم وأنا طالب من الرباط."],["Yesterday I studied English and met my friends.","أمس درست الإنجليزية وقابلت أصدقائي."],["Next summer I am going to visit Marrakech.","الصيف القادم سأزور مراكش."],["Learning English is changing my life.","تعلّم الإنجليزية يغيّر حياتي."]],[["Learning","تعلّم"],["Change","يغيّر"],["Life","حياة"],["Goal","هدف"],["Student","طالب"]]]
+];
+
 /* ---- المستويات ---- */
 const LEVELS = [
  { id:"a1", tag:"A1", next:"A2", name:"البداية", goal:"تحدث عن نفسك في 30 يومًا", sub:"من الصفر إلى أول محادثة", story:ADAM,
@@ -333,7 +384,7 @@ const LEVELS = [
     {q:"أي جملة سؤال صحيحة؟",o:["You like tea do?","Like you tea?","Do you like tea?","Tea you like?"],a:2},
     {q:"ما معنى Friend؟",o:["عدو","صديق","جار","معلم"],a:1},
     {q:"___ you like coffee?",o:["Does","Do","Is","Are"],a:1}]},
- { id:"a2", tag:"A2", next:"B1", name:"الحياة اليومية", goal:"تحدث عن يومك في 30 يومًا", sub:"الماضي، التسوق، الاتجاهات",
+ { id:"a2", tag:"A2", next:"B1", name:"الماضي والخطط", goal:"احكِ عن ماضيك وخططك في 30 يومًا", sub:"الماضي، السفر، الصحة، المطعم", story:ADAM2, weeks:WEEKS2,
    courseTitle:"كورس القواعد وشرح الأزمنة", courseUrl:plUrl(PL.gram),
    tip:"تعلّم 5 أفعال شاذة كل يوم (go → went, eat → ate).",
    cartoons:[{title:"مواقف يومية: تسوق ومطعم",url:yt("English cartoon daily life shopping restaurant dialogue")},{title:"قصص قصيرة مبسطة",url:yt("Learn English through story level 2 animated")}],
@@ -348,7 +399,15 @@ const LEVELS = [
     {q:"I ___ watching TV when you called.",o:["was","were","am","be"],a:0},
     {q:"She didn't ___ the book.",o:["reads","reading","readed","read"],a:3},
     {q:"ما معنى Expensive؟",o:["رخيص","غالٍ","كبير","جديد"],a:1},
-    {q:"Can I ___ some water, please?",o:["has","have","having","had"],a:1}]},
+    {q:"Can I ___ some water, please?",o:["has","have","having","had"],a:1},
+    {q:"Yesterday I ___ breakfast at six.",o:["have","had","has","having"],a:1},
+    {q:"She ___ to Casablanca last Sunday.",o:["go","goes","went","gone"],a:2},
+    {q:"___ you sleep well last night?",o:["Do","Does","Did","Are"],a:2},
+    {q:"I didn't ___ lunch yesterday.",o:["ate","eat","eaten","eating"],a:1},
+    {q:"Tomorrow I ___ going to travel.",o:["is","are","am","be"],a:2},
+    {q:"I ___ send you the photos tomorrow.",o:["will","did","was","had"],a:0},
+    {q:"ما معنى «Headache»؟",o:["صداع","زكام","حمى","سعال"],a:0},
+    {q:"كيف تطلب الفاتورة في المطعم؟",o:["The bill, please.","The menu, please.","A table, please.","Water, please."],a:0}]},
  { id:"b1", tag:"B1", next:"B2", name:"المتوسط", goal:"سافر وتفاهم في 30 يومًا", sub:"Present Perfect والشروط والسفر",
    courseTitle:"كورس الاستماع — تقوية مهارة الاستماع", courseUrl:plUrl(PL.listen),
    tip:"اكتب 3 جمل يوميًا عن يومك بالأزمنة الجديدة؛ الكتابة تثبّت القواعد.",
@@ -399,6 +458,7 @@ const LEVELS = [
     {q:"«To be honest» تعني:",o:["بصراحة","بسرعة","بالتأكيد","بالمناسبة"],a:0}]}
 ];
 LEVELS[0].words = ADAM.flatMap(d => d[3]);
+LEVELS[1].words = ADAM2.flatMap(d => d[3]);
 
 const PODCASTS = [
  {t:"BBC — 6 Minute English",l:"متوسط",d:"نقاشات قصيرة بمواضيع متنوعة مع شرح المفردات.",u:yt("BBC Learning English 6 Minute English")},
@@ -451,6 +511,12 @@ function mascot(size){
 }
 
 /* يوم واحد (بيانات موحّدة للأيام المكتوبة والمولّدة) */
+function genVideos(l, d){
+  let v2;
+  if(d%2===1){ const c=l.cartoons[((d-1)/2|0)%l.cartoons.length]; v2={t:c.title, s:"فيديو مساند", ch:"YouTube", u:c.url}; }
+  else { const p=l.podcasts[(d/2-1)%l.podcasts.length]; v2={t:p.title, s:"بودكاست مساند", ch:"YouTube", u:p.url}; }
+  return [ {t:l.courseTitle, s:"افتح القائمة؛ اختر درسًا", ch:CHANNEL, u:l.courseUrl}, v2 ];
+}
 function getDay(l, d){
   const wi = weekIdx(d);
   if(l.story){
@@ -462,7 +528,8 @@ function getDay(l, d){
     const support = sup[2]
       ? {t:"فيديو مساند: "+sup[0], s:"الجزء "+d, ch:CHANNEL, u:watchUrl(sup[2])}
       : {t:"فيديو مساند: "+sup[0], s:"يفتح القائمة؛ اختر درسًا", ch:CHANNEL, u:plUrl(PL[sup[1]])};
-    return {t, sub, read, words, wk:WEEKS[wi], wi, v:[lesson, support]};
+    const WK = l.weeks || WEEKS;
+    return {t, sub, read, words, wk:WK[wi], wi, v: l.id==="a1" ? [lesson, support] : genVideos(l,d)};
   }
   const half=(d-1)%2, words=l.words.slice(half*5, half*5+5);
   let v2;
@@ -660,7 +727,7 @@ function renderLevel(id, tab){
     body=`<div class="card"><h2>${esc(l.goal)}</h2><p class="muted">${esc(l.sub)}. كل يوم: فيديوهان، قراءة، كلمات، وتحدث، ثم تنهي اليوم.</p>
       <a class="btn" href="${esc(l.courseUrl)}" target="_blank" rel="noopener">▶ ${esc(l.courseTitle)} — ${CHANNEL}</a></div>
       <div class="tip">💡 ${esc(l.tip)}</div>
-      ${l.story?`<div class="sec"><h2>خطة الأسابيع</h2></div>`+WEEKS.map((w,k)=>`<div class="card"><span class="eyebrow">WEEK ${k+1} · ${esc(w.en)}</span><h3>${esc(w.ar)}</h3><div class="say"><small>في آخر الأسبوع ستقول:</small><b>${esc(w.say)}</b></div></div>`).join(""):""}
+      ${l.story?`<div class="sec"><h2>خطة الأسابيع</h2></div>`+(l.weeks||WEEKS).map((w,k)=>`<div class="card"><span class="eyebrow">WEEK ${k+1} · ${esc(w.en)}</span><h3>${esc(w.ar)}</h3><div class="say"><small>في آخر الأسبوع ستقول:</small><b>${esc(w.say)}</b></div></div>`).join(""):""}
       <div class="sec"><h2>🎬 كرتون</h2></div><div class="card">${l.cartoons.map(c=>`<div class="row"><div>${esc(c.title)}</div><a class="btn sm ghost" href="${esc(c.url)}" target="_blank" rel="noopener">شاهد</a></div>`).join("")}</div>
       <div class="sec"><h2>🎧 بودكاست</h2></div><div class="card">${l.podcasts.map(c=>`<div class="row"><div>${esc(c.title)}</div><a class="btn sm ghost" href="${esc(c.url)}" target="_blank" rel="noopener">استمع</a></div>`).join("")}</div>`;
   }
