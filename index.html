@@ -67,11 +67,17 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .tag.ok{background:#dcfce7;color:#166534}.tag.soon{background:#eceaf6;color:#5b5a78}
 .wod{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .wod b{direction:ltr;display:block;font-size:1.3rem;text-align:right}
+.ic{display:inline-flex;align-items:center;justify-content:center;vertical-align:-.2em;line-height:0}
+.ic svg{width:1.2em;height:1.2em;display:block}
+.spk{color:var(--blue)}
+.ic-check svg{width:1em;height:1em}
+.nav .ic svg,nav .ic svg{width:1.55rem;height:1.55rem}
 .spk{background:var(--blue-l);border:0;border-radius:50%;width:44px;height:44px;font-size:1.1rem;cursor:pointer;flex:none}
+.spk.mic{color:#e0482b}
 .spk.sm{width:34px;height:34px;font-size:.9rem}
 .soon-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .soon{background:rgba(255,255,255,.6);border-radius:20px;padding:14px;min-height:120px}
-.soon .ic{width:40px;height:40px;border-radius:12px;background:var(--blue-l);display:grid;place-items:center;font-size:1.2rem;margin-bottom:8px}
+.soon .soonic{width:40px;height:40px;border-radius:12px;background:var(--blue-l);display:grid;place-items:center;font-size:1.2rem;margin-bottom:8px}
 
 /* buttons */
 .btn{display:block;width:100%;border:0;border-radius:16px;padding:14px;background:var(--blue);color:#fff;font-weight:800;font-size:1rem;cursor:pointer;text-align:center;margin-top:10px}
@@ -128,6 +134,7 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .word span{display:block;color:var(--blue);margin-top:6px;visibility:hidden;font-size:.95rem}
 .word.show span{visibility:visible}
 .word .spk{position:absolute;top:6px;left:6px;width:30px;height:30px;font-size:.8rem}
+.word .spk .ic{display:inline-flex;visibility:visible;margin:0;color:var(--blue)}
 .dock{position:sticky;bottom:78px;padding:10px 0 4px;z-index:5;background:linear-gradient(rgba(244,241,234,0),var(--bg) 40%)}
 .dock .btn{margin:0;box-shadow:0 8px 24px rgba(30,64,216,.25)}
 
@@ -145,6 +152,8 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .nav .in{max-width:480px;margin:0 auto;display:flex;justify-content:space-around;padding:8px 6px}
 .nav a{flex:1;text-align:center;font-size:.76rem;color:var(--muted);font-weight:700;padding:4px}
 .nav a span{display:block;font-size:1.4rem;line-height:1.2}
+.nav a .ic{display:flex;justify-content:center;margin:0 auto 3px;width:auto}
+.soon .tag.soon{display:inline-block;margin-top:8px;min-height:0;padding:3px 12px;border-radius:999px;background:#eceaf6}
 .nav a.on{color:var(--blue)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:11px 20px;border-radius:99px;z-index:20;font-weight:700;max-width:90vw;text-align:center}
 input.txt{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);font-size:1rem;font-family:inherit;background:#fff}
@@ -560,7 +569,59 @@ function curDay(id){ const d=daysList(id); for(let k=1;k<=DAYS;k++) if(!d.includ
 const dayUnlocked = (id,d) => d===1 || daysList(id).includes(d-1) || daysList(id).includes(d);
 function streak(){ let n=0; const d=new Date(); if(!S.log[dkey(d)]) d.setDate(d.getDate()-1); while(S.log[dkey(d)]){ n++; d.setDate(d.getDate()-1);} return n; }
 
-function speak(t){ if(!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; u.rate=.85; speechSynthesis.speak(u);}catch(e){} }
+/* ---- اختيار أفضل صوت إنجليزي متاح في الجهاز ---- */
+let _voice=null;
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return null;
+  const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang));
+  if(!vs.length) return null;
+  const score=v=>{ const n=v.name; let k=0;
+    if(/natural|neural|premium|enhanced|online/i.test(n)) k+=60;
+    if(/google/i.test(n)) k+=30;
+    if(/siri|samantha|ava|allison|evan|nicky|zoe|aria|jenny|guy|emma|andrew|brian|daniel|serena|karen/i.test(n)) k+=25;
+    if(/en[-_]US/i.test(v.lang)) k+=15; else if(/en[-_]GB/i.test(v.lang)) k+=8;
+    if(/compact|espeak|robot|fred|ralph|zarvox|bad |whisper|bells|boing|trinoids/i.test(n)) k-=80;
+    if(!v.localService) k+=5;
+    return k; };
+  return vs.sort((a,b)=>score(b)-score(a))[0];
+}
+if("speechSynthesis" in window){ speechSynthesis.onvoiceschanged=()=>{ _voice=pickVoice(); }; _voice=pickVoice(); }
+function speak(t){ if(!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); if(!_voice) _voice=pickVoice(); const u=new SpeechSynthesisUtterance(t); u.lang=_voice?_voice.lang:"en-US"; if(_voice){ try{ u.voice=_voice; }catch(e){} } u.rate=.92; u.pitch=1; speechSynthesis.speak(u);}catch(e){} }
+
+/* ---- أيقونات SVG بدل الإيموجي ---- */
+const ICONS={
+ spk:'<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor" stroke="none"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>',
+ mic:'<rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="3"/>',
+ checkc:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6" stroke-width="2.4"/>',
+ lock:'<rect x="5" y="11" width="14" height="9.5" rx="2.5" fill="currentColor" stroke="none"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ home:'<path d="M4 11l8-6.5 8 6.5v8.5a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/>',
+ compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/>',
+ chart:'<path d="M5 20V11M12 20V4M19 20v-6"/>',
+ user:'<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c.8-4 3.8-6 7.5-6s6.700 2 7.500 6"/>',
+ head:'<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.500" y="14" width="4.500" height="6.500" rx="2" fill="currentColor"/><rect x="16" y="14" width="4.500" height="6.500" rx="2" fill="currentColor"/>',
+ book:'<path d="M12 6.500C10 5 7 4.500 4 5v13c3-.5 6 0 8 1.500 2-1.500 5-2 8-1.500V5c-3-.5-6 0-8 1.500zM12 6.500v13"/>',
+ cards:'<rect x="4" y="4" width="7" height="7" rx="1.800"/><rect x="13" y="4" width="7" height="7" rx="1.800"/><rect x="4" y="13" width="7" height="7" rx="1.800"/><rect x="13" y="13" width="7" height="7" rx="1.800"/>',
+ chat:'<path d="M5 5h14a1.500 1.500 0 0 1 1.500 1.500v8A1.500 1.500 0 0 1 19 16h-8l-5 4v-4H5a1.500 1.500 0 0 1-1.500-1.500v-8A1.500 1.500 0 0 1 5 5z"/>',
+ bolt:'<path d="M13 3L5.500 13.500H12L11 21l7.500-10.500H12z" fill="currentColor"/>',
+ play:'<path d="M8 5.500v13l11-6.500z" fill="currentColor" stroke="none"/>',
+ mike:'<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>'
+};
+const EMO_MAP={"🔊":"spk","🎤":"mic","🎙️":"mic","🎙":"mic","✓":"check","✔":"check","✅":"checkc","🔒":"lock","🏠":"home","🧭":"compass","📊":"chart","👤":"user","🎧":"head","📖":"book","🗂️":"cards","🗂":"cards","🗣️":"chat","🗣":"chat","💬":"chat","🧩":"bolt","▶":"play"};
+const EMO_RE=new RegExp(Object.keys(EMO_MAP).sort((a,b)=>b.length-a.length).join("|"),"g");
+function icSvg(n){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`; }
+function iconify(root){
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>(n.parentNode&&!/^(SCRIPT|STYLE|TEXTAREA|SVG|TITLE)$/i.test(n.parentNode.nodeName)&&(EMO_RE.lastIndex=0,EMO_RE.test(n.nodeValue)))?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const list=[]; while(w.nextNode()) list.push(w.currentNode);
+  list.forEach(n=>{
+    const parts=n.nodeValue.split(new RegExp("("+EMO_RE.source+")","g")); const f=document.createDocumentFragment();
+    parts.forEach(t=>{ if(!t) return; if(EMO_MAP[t]){ const sp=document.createElement("span"); sp.className="ic ic-"+EMO_MAP[t]; sp.innerHTML=icSvg(EMO_MAP[t]); f.appendChild(sp);} else f.appendChild(document.createTextNode(t)); });
+    n.parentNode.replaceChild(f,n);
+  });
+}
+let _icBusy=false;
+new MutationObserver(()=>{ if(_icBusy) return; _icBusy=true; try{ iconify(document.body); }finally{ _icBusy=false; } }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+document.addEventListener("DOMContentLoaded",()=>iconify(document.body));
 function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
 
 let _m=0;
@@ -740,8 +801,8 @@ function renderHome(){
     <div class="card wod"><div><b>${esc(wod[0])}</b><span class="muted">${esc(wod[1])}</span></div><button class="spk" data-say="${esc(wod[0])}" aria-label="استمع">🔊</button></div>
     <div class="sec"><h2>قريبًا</h2></div>
     <div class="soon-grid">
-      <div class="soon"><div class="ic">💬</div><h3>محادثة بالذكاء الاصطناعي</h3><span class="tag soon">قريبًا</span></div>
-      <div class="soon"><div class="ic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon">قريبًا</span></div>
+      <div class="soon"><div class="soonic">💬</div><h3>محادثة بالذكاء الاصطناعي</h3><span class="tag soon">قريبًا</span></div>
+      <div class="soon"><div class="soonic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon">قريبًا</span></div>
     </div>`;
   $("#go").onclick=()=>{ location.hash = cd ? "#/day/"+l.id+"/"+cd : (passed(l.id) ? "#/level/"+l.id : "#/quiz/"+l.id); };
   view.querySelectorAll(".lv").forEach(b=>b.onclick=()=>openSheet(+b.dataset.i));
