@@ -156,7 +156,7 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .soon .tag.soon{display:inline-block;margin-top:8px;min-height:0;padding:3px 12px;border-radius:999px;background:#eceaf6}
 .nav a.on{color:var(--blue)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:11px 20px;border-radius:99px;z-index:20;font-weight:700;max-width:90vw;text-align:center}
-input.txt{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);font-size:1rem;font-family:inherit;background:#fff}
+input.txt,select.txt{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);font-size:1rem;font-family:inherit;background:#fff}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .stat{background:var(--card);border-radius:18px;padding:14px 6px;text-align:center;box-shadow:var(--shadow)}
 .stat b{display:block;font-size:1.5rem;color:var(--blue)}.stat span{font-size:.78rem;color:var(--muted)}
@@ -492,7 +492,7 @@ const LEVELS = [
     {q:"ما معنى «My flight has been delayed»؟",o:["تأخرت رحلتي","أُلغيت رحلتي","فاتتني رحلتي","وصلت رحلتي"],a:0},
     {q:"ما معنى «Interview»؟",o:["مقابلة عمل","راتب","عقد","ترقية"],a:0}]},
  { id:"b2", tag:"B2", next:"C1", name:"فوق المتوسط", goal:"عبّر عن رأيك في 30 يومًا", sub:"المبني للمجهول، العبارات الفعلية، الرأي",
-   courseTitle:"كورس المستوى المتقدم", courseUrl:yt("zAmericanEnglish كورس المستوى المتقدم انجليزي advanced"),
+   courseTitle:"كورس القراءة — المستوى المتقدم", courseUrl:plUrl(PL.read),
    tip:"شاهد بترجمة إنجليزية فقط، والتقط المعنى العام بدل ترجمة كل كلمة.",
    cartoons:[{title:"شرح Phrasal Verbs متحرك",url:yt("animated English lesson phrasal verbs explained")},{title:"دروس TED-Ed",url:yt("TED-Ed animated English lessons")}],
    podcasts:[{title:"BBC — The English We Speak",url:yt("BBC The English We Speak podcast")},{title:"Business English Pod",url:yt("Business English Pod")}],
@@ -591,19 +591,64 @@ function speakLocal(t){ if(!("speechSynthesis" in window)) return; try{ speechSy
 
 /* ---- صوت بشري عبر خدمة TTS على الإنترنت، مع رجوع تلقائي لصوت الجهاز ---- */
 let _au=null, _tok=0, _netBad=0;
-function stopSpeech(){ _tok++; try{ if(_au){ _au.pause(); _au.onended=_au.onerror=null; _au=null; } }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} }
+function stopSpeech(){ _tok++; try{ if(_au){ _au.pause(); _au.onended=_au.onerror=_au.onplaying=null; _au=null; } }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} }
 function ttsChunks(t){ const out=[]; let cur=""; (String(t).match(/[^.!?]+[.!?]*\s*/g)||[String(t)]).forEach(x=>{ if(cur && (cur+x).length>170){ out.push(cur.trim()); cur=x; } else cur+=x; }); if(cur.trim()) out.push(cur.trim()); return out; }
 const ttsUrl=q=>"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q="+encodeURIComponent(q);
-function playChunk(src){ return new Promise((res,rej)=>{ const a=new Audio(); _au=a; let started=false;
-  const tm=setTimeout(()=>{ if(!started) rej(new Error("timeout")); },5000);
+const _A=new Audio(); let _unl=false;
+document.addEventListener("pointerdown",()=>{ if(_unl) return; _unl=true; try{ _A.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="; const q=_A.play(); if(q&&q.catch) q.catch(()=>{}); }catch(e){} },{once:true,capture:true});
+function playChunk(src){ return new Promise((res,rej)=>{ const a=_A; _au=a; let started=false;
+  const tm=setTimeout(()=>{ if(!started) rej(new Error("timeout")); },6000);
   a.onplaying=()=>{ started=true; clearTimeout(tm); };
   a.onended=()=>{ clearTimeout(tm); res(); }; a.onerror=()=>{ clearTimeout(tm); rej(new Error("audio")); };
   a.src=src; const pr=a.play(); if(pr&&pr.catch) pr.catch(e=>{ clearTimeout(tm); rej(e); }); }); }
+/* اسم ملف الصوت: تجزئة FNV-1a لنص الجملة (نفس الدالة في سكربت التوليد) */
+function fnv(t){ let h=0x811c9dc5; for(let i=0;i<t.length;i++){ h^=t.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } return h.toString(16).padStart(8,"0"); }
+const audioUrl=t=>"audio/"+fnv(String(t).trim())+".mp3";
+/* ---- ElevenLabs داخل التطبيق: المفتاح محفوظ في هاتفك فقط، والأصوات تُخزَّن في الهاتف بعد أول توليد ---- */
+const EL_KEY="englishPath.el";
+const elCfg=()=>{ try{ return JSON.parse(localStorage.getItem(EL_KEY)||"{}"); }catch(e){ return {}; } };
+const elSave=c=>{ try{ localStorage.setItem(EL_KEY,JSON.stringify(c)); }catch(e){} };
+let _db=null;
+const idb=()=>_db||(_db=new Promise((res,rej)=>{ try{ const r=indexedDB.open("englishPathAudio",1); r.onupgradeneeded=()=>r.result.createObjectStore("a"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }));
+async function idbGet(k){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("a").objectStore("a").get(k); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function idbPut(k,v){ try{ const db=await idb(); await new Promise(res=>{ const t=db.transaction("a","readwrite"); t.objectStore("a").put(v,k); t.oncomplete=res; t.onerror=res; t.onabort=res; }); }catch(e){} }
+async function idbCount(){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("a").objectStore("a").count(); q.onsuccess=()=>res(q.result); q.onerror=()=>res(0); }); }catch(e){ return 0; } }
+async function elFetch(text){
+  const c=elCfg(); if(!c.key||!c.voice) return null;
+  const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+encodeURIComponent(c.voice)+"?output_format=mp3_44100_64",{method:"POST",headers:{"xi-api-key":c.key,"Content-Type":"application/json"},body:JSON.stringify({text,model_id:c.model||"eleven_flash_v2_5",voice_settings:{stability:.5,similarity_boost:.75}})});
+  if(!r.ok){ const e=new Error("el"+r.status); e.status=r.status; throw e; }
+  return await r.blob();
+}
+async function elBlob(text){ text=text.trim(); const k=fnv(text); let b=await idbGet(k); if(b) return b; b=await elFetch(text); if(b) await idbPut(k,b); return b; }
+function elErrText(e){ return e&&e.status===401?"مفتاح ElevenLabs غير صحيح":e&&(e.status===402||e.status===429)?"انتهى رصيد ElevenLabs أو الطلبات كثيرة":"تعذّر الاتصال بـ ElevenLabs"; }
+let _elBad=0;
+/* الترتيب: صوت محفوظ في الهاتف ← ملف audio/ ← ElevenLabs مباشرة ← صوت الإنترنت ← صوت الجهاز */
 async function speak(t){
   stopSpeech(); const tok=_tok;
-  if(!navigator.onLine || Date.now()-_netBad<60000){ speakLocal(t); return; }
-  try{ for(const c of ttsChunks(t)){ if(tok!==_tok) return; await playChunk(ttsUrl(c)); } }
-  catch(e){ if(tok!==_tok) return; _netBad=Date.now(); speakLocal(t); }
+  const units=Array.isArray(t)?t:(String(t).length<=200?[String(t)]:ttsChunks(t));
+  for(let i=0;i<units.length;i++){
+    if(tok!==_tok) return;
+    const u=units[i], k=fnv(String(u).trim());
+    const cached=await idbGet(k); if(tok!==_tok) return;
+    if(cached){ try{ await playChunk(URL.createObjectURL(cached)); continue; }catch(e){ if(tok!==_tok) return; } }
+    try{ await playChunk(audioUrl(u)); continue; }catch(e){ if(tok!==_tok) return; }
+    if(elCfg().key && navigator.onLine && Date.now()-_elBad>60000){
+      try{ const b=await elBlob(u); if(tok!==_tok) return; if(b){ await playChunk(URL.createObjectURL(b)); continue; } }
+      catch(e){ if(tok!==_tok) return; _elBad=Date.now(); toast(elErrText(e)); }
+    }
+    if(navigator.onLine && Date.now()-_netBad>60000){
+      try{ for(const c of ttsChunks(u)){ if(tok!==_tok) return; await playChunk(ttsUrl(c)); } continue; }
+      catch(e){ if(tok!==_tok) return; _netBad=Date.now(); }
+    }
+    speakLocal(units.slice(i).join(" ")); return;
+  }
+}
+/* كل نصوص التطبيق الأساسية (كلمات + جمل + عبارات الأسبوع) */
+function coreSpeechTexts(){
+  const set=new Set();
+  LEVELS.forEach(l=>{ (l.words||[]).forEach(w=>set.add(w[0].trim()));
+    for(let d=1;d<=DAYS;d++){ const g=getDay(l,d); (g.read||[]).forEach(r=>set.add(r[0].trim())); g.words.forEach(w=>set.add(w[0].trim())); if(g.wk&&g.wk.say) set.add(g.wk.say.trim()); } });
+  return [...set];
 }
 
 /* ---- أيقونات SVG بدل الإيموجي ---- */
@@ -649,32 +694,39 @@ function mascot(size){
 }
 
 /* يوم واحد (بيانات موحّدة للأيام المكتوبة والمولّدة) */
-function genVideos(l, d){
-  let v2;
-  if(d%2===1){ const c=l.cartoons[((d-1)/2|0)%l.cartoons.length]; v2={t:c.title, s:"فيديو مساند", ch:"YouTube", u:c.url}; }
-  else { const p=l.podcasts[(d/2-1)%l.podcasts.length]; v2={t:p.title, s:"بودكاست مساند", ch:"YouTube", u:p.url}; }
-  return [ {t:l.courseTitle, s:"افتح القائمة؛ اختر درسًا", ch:CHANNEL, u:l.courseUrl}, v2 ];
+/* كل الفيديوهات تُشغَّل داخل التطبيق: مشغّل يوتيوب المدمج على قوائم القناة */
+const LVL_PL = { a1:PL.lvl1, a2:PL.gram, b1:PL.listen, b2:PL.read, c1:PL.conv };
+const embedPl = (list, idx) => "https://www.youtube.com/embed/videoseries?list=" + list + "&index=" + Math.max(0, idx) + "&rel=0";
+function mkVideos(l, d){
+  const list = LVL_PL[l.id] || PL.lvl1;
+  let main;
+  if(l.id==="a1"){
+    main = d<=25
+      ? {t:"المستوى الأول · الدرس "+d, s:"يُشغَّل هنا داخل التطبيق", ch:CHANNEL, u:LESSON_IDS[d]?watchUrl(LESSON_IDS[d], PL.lvl1):plUrl(PL.lvl1), embed:embedLesson(d)}
+      : {t:"مراجعة المستوى الأول", s:"أعد مشاهدة أي درس لم تتقنه", ch:CHANNEL, u:plUrl(PL.lvl1), embed:embedPl(PL.lvl1, d-26)};
+  } else {
+    main = {t:l.courseTitle+" · الحلقة "+d, s:"يُشغَّل هنا داخل التطبيق", ch:CHANNEL, u:plUrl(list), embed:embedPl(list, d-1)};
+  }
+  const sup = d<=7 ? ["كورس الصوتيات","phon",0] : d<=14 ? ["كورس القراءة","read",7] : d<=21 ? ["كورس الاستماع","listen",14] : ["كورس المحادثة","conv",21];
+  const support = (sup[1]==="phon" && PHON_IDS[d])
+    ? {t:"فيديو مساند: "+sup[0], s:"الجزء "+d+" · يُشغَّل هنا", ch:CHANNEL, u:watchUrl(PHON_IDS[d], PL.phon), embed:"https://www.youtube.com/embed/"+PHON_IDS[d]+"?list="+PL.phon+"&rel=0"}
+    : {t:"فيديو مساند: "+sup[0], s:"الجزء "+(d-sup[2])+" · يُشغَّل هنا", ch:CHANNEL, u:plUrl(PL[sup[1]]), embed:embedPl(PL[sup[1]], d-sup[2]-1)};
+  return [main, support];
 }
+function genVideos(l, d){ return mkVideos(l, d); }
 function getDay(l, d){
   const wi = weekIdx(d);
   if(l.story){
     const [t, sub, read, words] = l.story[d-1];
-    const lesson = d<=25
-      ? {t:"المستوى الأول · الدرس "+d, s:"يُشغَّل هنا داخل التطبيق", ch:CHANNEL, u:LESSON_IDS[d]?watchUrl(LESSON_IDS[d], PL.lvl1):plUrl(PL.lvl1), embed:embedLesson(d)}
-      : {t:"مراجعة المستوى الأول", s:"أعد مشاهدة أي درس لم تتقنه", ch:CHANNEL, u:plUrl(PL.lvl1)};
-    const sup = d<=7 ? ["كورس الصوتيات","phon",PHON_IDS[d]] : d<=14 ? ["كورس القراءة","read"] : d<=21 ? ["كورس الاستماع","listen"] : ["كورس المحادثة","conv"];
-    const support = sup[2]
-      ? {t:"فيديو مساند: "+sup[0], s:"الجزء "+d, ch:CHANNEL, u:watchUrl(sup[2])}
-      : {t:"فيديو مساند: "+sup[0], s:"يفتح القائمة؛ اختر درسًا", ch:CHANNEL, u:plUrl(PL[sup[1]])};
     const WK = l.weeks || WEEKS;
-    return {t, sub, read, words, wk:WK[wi], wi, v: l.id==="a1" ? [lesson, support] : genVideos(l,d)};
+    return {t, sub, read, words, wk:WK[wi], wi, v: mkVideos(l,d)};
   }
   const half=(d-1)%2, words=l.words.slice(half*5, half*5+5);
   let v2;
   if(d%2===1){ const c=l.cartoons[((d-1)/2|0)%l.cartoons.length]; v2={t:c.title, s:"فيديو مساند", ch:"YouTube", u:c.url}; }
   else { const p=l.podcasts[(d/2-1)%l.podcasts.length]; v2={t:p.title, s:"بودكاست مساند", ch:"YouTube", u:p.url}; }
   return {t:"تدريب اليوم "+d, sub:words.map(w=>w[0]).join(" · "), read:null, words, wk:{en:"WEEK "+(wi+1), ar:"الأسبوع "+(wi+1)}, wi,
-    v:[ {t:l.courseTitle, s:"الدرس "+d, ch:CHANNEL, u:l.courseUrl}, v2 ]};
+    v: mkVideos(l,d)};
 }
 
 function completeDay(id, d){
@@ -901,9 +953,10 @@ function renderDay(id, d){
     </div>
 
     <div class="sech"><div class="n">1</div><h2>🎧 الاستماع</h2></div>
-    <p class="note">شاهد الفيديوهين بالترتيب. يفتح الفيديو في يوتيوب، ارجع إلى هنا بعد المشاهدة.</p>
+    <p class="note">شاهد الفيديوهين بالترتيب. اضغط ▶ فيُشغَّل الفيديو هنا داخل التطبيق.</p>
     ${g.v.map((v,k)=>`<div class="vid ${seen[k]?"seen":""}" data-k="${k}"><div class="vt"><div class="vn">${esc(v.t)}</div><div class="vs">${esc(v.s)}</div><div class="vc">${esc(v.ch)}</div></div>
       <a class="play" href="${esc(v.u)}" target="_blank" rel="noopener" data-k="${k}" aria-label="شغّل">${seen[k]?"✓":"▶"}</a></div>${v.embed?`<div class="player" id="pl${k}" hidden></div>`:""}`).join("")}
+    ${(()=>{ const c=(l.cartoons||[])[(d-1)%(l.cartoons||[1]).length], pc=(l.podcasts||[])[(d-1)%(l.podcasts||[1]).length]; return (c||pc)?`<p class="note" style="margin-top:10px">للمزيد (اختياري): ${c?`<a href="${esc(c.url)}" target="_blank" rel="noopener">كرتون: ${esc(c.title)}</a>`:""}${c&&pc?" · ":""}${pc?`<a href="${esc(pc.url)}" target="_blank" rel="noopener">بودكاست: ${esc(pc.title)}</a>`:""}</p>`:""; })()}
 
     ${g.read?`<div class="sech"><div class="n">2</div><h2>📖 القراءة</h2></div><p class="note">اضغط على الجملة لترى الترجمة، وعلى 🔊 لتسمعها.</p>`+
       g.read.map(([en,ar])=>`<div class="sent"><div class="top"><div class="en">${esc(en)}</div><button class="spk sm" data-say="${esc(en)}" aria-label="استمع">🔊</button></div><div class="ar">${esc(ar)}</div></div>`).join(""):""}
@@ -940,7 +993,7 @@ function renderDay(id, d){
   }));
   view.querySelectorAll(".sent").forEach(x=>x.onclick=e=>{ if(e.target.closest(".spk")) return; x.classList.toggle("show"); });
   view.querySelectorAll("[data-mic]").forEach(m=>m.onclick=()=>micTry(m.closest(".spkrow")));
-  $("#sayAll").onclick=()=>speak(g.read ? g.read.map(r=>r[0]).join(" ") : g.words.map(w=>w[0]).join(". "));
+  $("#sayAll").onclick=()=>speak(g.read ? g.read.map(r=>r[0]) : g.words.map(w=>w[0]));
   dock.onclick=()=>{
     if(dock.disabled) return;
     if(isDone){ location.hash = d<DAYS ? "#/day/"+id+"/"+(d+1) : "#/level/"+id; return; }
@@ -1185,13 +1238,64 @@ function renderProgress(){
   bindCommon();
 }
 function renderMe(){
+  const c=elCfg();
   view.innerHTML=`<h1>حسابي</h1>
     <div class="sec"><h2>اسمك</h2></div>
     <input class="txt" id="nm" placeholder="اكتب اسمك" maxlength="20" value="${esc(S.name)}">
     <p class="muted small">تقدمك محفوظ في هذا المتصفح فقط.</p>
+
+    <div class="sec"><h2>صوت ElevenLabs</h2></div>
+    <div class="card" id="elbox">
+      <p class="note" style="margin-top:0">للحصول على صوت بشري: الصق مفتاح API الخاص بك. يُحفظ في هاتفك فقط ولا يُرسل لأي جهة غير ElevenLabs.</p>
+      <input class="txt" id="elk" type="password" placeholder="مفتاح API" autocomplete="off" value="${esc(c.key||"")}">
+      <button class="btn ghost" id="elc" style="margin-top:8px">ربط واختيار صوت</button>
+      <div id="elv"></div>
+      <div id="elst" class="muted small" style="margin-top:8px"></div>
+    </div>
+
     <div class="center"><button class="link" id="rs">إعادة ضبط كل التقدم</button></div>`;
   $("#nm").oninput=e=>{ S.name=e.target.value.trim(); save(); };
   $("#rs").onclick=()=>{ if(confirm("هل تريد مسح كل تقدمك والبدء من جديد؟")){ S=fresh(); save(); location.hash="#/"; route(); } };
+
+  const st=$("#elst"), vbox=$("#elv"); let stop=false;
+  const refreshSt=async()=>{ const n=await idbCount(); st.textContent=n?("أصوات محفوظة في هاتفك: "+n):""; };
+  function drawVoices(list){
+    const cur=elCfg().voice;
+    vbox.innerHTML=`<label class="muted small" style="display:block;margin-top:10px">اختر الصوت</label>
+      <select class="txt" id="elsel">${list.map(v=>`<option value="${esc(v.id)}" ${v.id===cur?"selected":""}>${esc(v.name)}${v.tag?" · "+esc(v.tag):""}</option>`).join("")}</select>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost" id="elt" style="margin:0">🔊 جرّب الصوت</button><button class="btn" id="ela" style="margin:0">حمّل كل الأصوات</button></div>
+      <p class="muted small" id="elinfo"></p>`;
+    const sel=$("#elsel"); const saveV=()=>{ const cc=elCfg(); cc.voice=sel.value; elSave(cc); }; saveV(); sel.onchange=saveV;
+    $("#elt").onclick=async()=>{ st.textContent="جاري التوليد…"; try{ const b=await elBlob("Hello! Nice to meet you. How are you today?"); await refreshSt(); if(b) await playChunk(URL.createObjectURL(b)); }catch(e){ st.textContent=elErrText(e); } };
+    const texts=coreSpeechTexts();
+    (async()=>{ let miss=0,ch=0; for(const t of texts){ if(!(await idbGet(fnv(t)))){ miss++; ch+=t.length; } } $("#elinfo").textContent=miss?("ناقص "+miss+" صوتًا (≈ "+Math.ceil(ch*0.5)+" رصيد). يمكنك تركه: كل صوت يُولَّد ويُحفظ تلقائيًا عند أول استخدام."):"كل الأصوات الأساسية محفوظة في هاتفك ✓"; })();
+    $("#ela").onclick=async()=>{
+      const btn=$("#ela"); if(btn.dataset.run){ stop=true; return; }
+      btn.dataset.run=1; btn.textContent="إيقاف"; stop=false; let done=0,fail=0;
+      for(let i=0;i<texts.length&&!stop;i++){
+        const t=texts[i]; if(await idbGet(fnv(t))){ done++; continue; }
+        try{ await elBlob(t); done++; }catch(e){ if(e.status===401||e.status===402||e.status===429){ st.textContent=elErrText(e)+" — توقّف عند "+done+" من "+texts.length; fail=1; break; } }
+        st.textContent="جاري التحميل: "+done+" / "+texts.length;
+      }
+      delete btn.dataset.run; btn.textContent="حمّل كل الأصوات"; await refreshSt();
+      if(!fail) st.textContent=stop?"تم الإيقاف. المحفوظ يبقى في هاتفك.":"اكتمل التحميل ✓";
+    };
+  }
+  async function connect(){
+    const key=$("#elk").value.trim(); if(!key){ st.textContent="الصق المفتاح أولًا"; return; }
+    st.textContent="جاري الاتصال…";
+    try{
+      const r=await fetch("https://api.elevenlabs.io/v1/voices",{headers:{"xi-api-key":key}});
+      if(!r.ok){ const e=new Error("x"); e.status=r.status; throw e; }
+      const j=await r.json();
+      const list=(j.voices||[]).map(v=>({id:v.voice_id,name:v.name,tag:v.category==="premade"?"جاهز":(v.labels&&v.labels.accent)||v.category||"",pre:v.category==="premade"?0:1,lang:(v.labels&&(v.labels.language||""))})).sort((a,b)=>a.pre-b.pre||a.name.localeCompare(b.name));
+      if(!list.length){ st.textContent="لا توجد أصوات في حسابك."; return; }
+      const cc=elCfg(); cc.key=key; if(!cc.voice||!list.some(v=>v.id===cc.voice)) cc.voice=list[0].id; elSave(cc); _elBad=0;
+      st.textContent="تم الربط ✓"; drawVoices(list); await refreshSt();
+    }catch(e){ st.textContent=e.status===401?"المفتاح غير صحيح":"تعذّر الاتصال. تأكد من الإنترنت والمفتاح."; }
+  }
+  $("#elc").onclick=connect;
+  if(c.key) connect(); else refreshSt();
 }
 
 route();
