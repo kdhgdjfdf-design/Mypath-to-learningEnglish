@@ -653,6 +653,21 @@ function coreSpeechTexts(){
   return [...set];
 }
 
+/* ---- مؤثرات صوتية (مولَّدة بالكود، بدون ملفات) ---- */
+let _ac=null;
+const sfxOn=()=>{ try{ return localStorage.getItem("englishPath.sfx")!=="0"; }catch(e){ return true; } };
+function _tone(ac,f,t0,dur,type,vol){ const o=ac.createOscillator(), g=ac.createGain(); o.type=type; o.frequency.setValueAtTime(f,t0); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+dur+.05); }
+function sfx(kind){
+  if(!sfxOn()) return;
+  try{
+    _ac=_ac||new (window.AudioContext||window.webkitAudioContext)(); const ac=_ac; if(ac.state==="suspended") ac.resume(); const t=ac.currentTime;
+    if(kind==="ok"){ _tone(ac,659.25,t,.18,"sine",.3); _tone(ac,880,t+.1,.18,"sine",.3); _tone(ac,1318.5,t+.2,.38,"sine",.26); }
+    else if(kind==="bad"){ _tone(ac,220,t,.22,"sawtooth",.16); _tone(ac,164.8,t+.16,.36,"sawtooth",.16); try{ navigator.vibrate&&navigator.vibrate(120); }catch(e){} }
+    else if(kind==="win"){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>_tone(ac,f,t+i*.12,.32,"triangle",.26)); }
+  }catch(e){}
+}
+const speakAfterSfx=t=>setTimeout(()=>speak(t),650);
+
 /* ---- أيقونات SVG بدل الإيموجي ---- */
 const ICONS={
  spk:'<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor" stroke="none"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>',
@@ -1103,13 +1118,13 @@ function drawEx(){
   else body=`<div class="muted small">رتّب الجملة بالإنجليزية:</div><div class="q" style="margin-bottom:4px">${esc(it.ar)}</div><div class="ans" id="ans"></div><div class="bank" id="bank"></div><button class="btn" id="chk" disabled>تحقق</button>`;
   view.innerHTML=head+body+`<div class="fb" id="fb"></div><button class="btn" id="nx" style="display:none">${last?"النتيجة":"التالي"}</button></div>`;
   let locked=false;
-  const finish=(ok,msg)=>{ locked=true; if(ok) EX.score++; const fb=$("#fb"); fb.className="fb "+(ok?"ok":"bad"); fb.textContent=msg; $("#nx").style.display="block"; };
+  const finish=(ok,msg)=>{ locked=true; sfx(ok?"ok":"bad"); if(ok) EX.score++; const fb=$("#fb"); fb.className="fb "+(ok?"ok":"bad"); fb.textContent=msg; $("#nx").style.display="block"; };
   if(it.t==="mcq"||it.t==="fill"){
     view.querySelectorAll(".opt").forEach((b,k)=>b.onclick=()=>{
       if(locked) return;
       const ok=it.o[k]===it.a;
       view.querySelectorAll(".opt").forEach((x,j)=>{ x.disabled=true; if(it.o[j]===it.a) x.classList.add("right"); else if(j===k) x.classList.add("wrong"); });
-      if(it.say) speak(it.say);
+      if(it.say) speakAfterSfx(it.say);
       finish(ok, ok?"صحيح! ✓":"الجواب الصحيح: "+it.a);
     });
   } else {
@@ -1127,7 +1142,7 @@ function drawEx(){
     $("#chk").onclick=()=>{
       if(locked) return;
       const got=ans.map(x=>x.w).join(" "), ok=got===it.a;
-      $("#ans").classList.add(ok?"ok":"bad"); speak(it.a);
+      $("#ans").classList.add(ok?"ok":"bad"); speakAfterSfx(it.a);
       view.querySelectorAll(".chip2").forEach(c=>c.disabled=true); $("#chk").disabled=true;
       finish(ok, ok?"صحيح! ✓":"الصحيح: "+it.a);
     };
@@ -1136,7 +1151,7 @@ function drawEx(){
 }
 function exResult(){
   const ok=EX.score>=3, key=EX.id+":"+EX.d;
-  if(ok){ S.ex[key]=true; save(); }
+  if(ok){ S.ex[key]=true; save(); setTimeout(()=>sfx("win"),500); }
   view.innerHTML=`<div class="card"><div class="big">${ok?"🎉":"💪"}</div><h1 class="center">${EX.score} / ${EX.items.length}</h1>
     <p class="center">${ok?"أحسنت! فُتح زر «أنهيت اليوم».":"تحتاج 3 إجابات صحيحة على الأقل. راجع كلمات اليوم وأعد المحاولة."}</p>
     ${ok?`<a class="btn ok" href="#/day/${EX.id}/${EX.d}">العودة لليوم ${EX.d}</a>`:`<button class="btn" id="again">🔁 أعد التمرين</button><a class="btn ghost" href="#/day/${EX.id}/${EX.d}">راجع الدرس</a>`}</div>`;
@@ -1204,12 +1219,12 @@ function pick(k){
   if(quiz.locked) return; quiz.locked=true;
   const c=quiz.qs[quiz.n];
   view.querySelectorAll(".opt").forEach((b,i)=>{ b.disabled=true; if(c.opts[i].ok) b.classList.add("right"); else if(i===k) b.classList.add("wrong"); });
-  if(c.opts[k].ok) quiz.score++; else quiz.wrong.push(c.q);
+  sfx(c.opts[k].ok?"ok":"bad"); if(c.opts[k].ok) quiz.score++; else quiz.wrong.push(c.q);
   $("#nx").style.display="block";
 }
 function renderResult(){
   const i=idxOf(quiz.id), l=LEVELS[i], ok=quiz.score>=l.pass, last=i===LEVELS.length-1;
-  if(ok){ S.done[l.id]=Math.max(quiz.score,S.done[l.id]||0); S.log[dkey()]=true; save(); }
+  if(ok){ S.done[l.id]=Math.max(quiz.score,S.done[l.id]||0); S.log[dkey()]=true; save(); setTimeout(()=>sfx("win"),400); }
   view.innerHTML=`
     <div class="card">
       <div class="big">${ok?"🎉":"💪"}</div>
@@ -1246,6 +1261,9 @@ function renderMe(){
     <input class="txt" id="nm" placeholder="اكتب اسمك" maxlength="20" value="${esc(S.name)}">
     <p class="muted small">تقدمك محفوظ في هذا المتصفح فقط.</p>
 
+    <div class="sec"><h2>المؤثرات الصوتية</h2></div>
+    <label class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" id="sfxc" ${sfxOn()?"checked":""} style="width:22px;height:22px"><span>أصوات الإجابة الصحيحة والخاطئة</span></label>
+
     <div class="sec"><h2>صوت ElevenLabs</h2></div>
     <div class="card" id="elbox">
       <p class="note" style="margin-top:0">للحصول على صوت بشري: الصق مفتاح API الخاص بك. يُحفظ في هاتفك فقط ولا يُرسل لأي جهة غير ElevenLabs.</p>
@@ -1259,6 +1277,7 @@ function renderMe(){
   $("#nm").oninput=e=>{ S.name=e.target.value.trim(); save(); };
   $("#rs").onclick=()=>{ if(confirm("هل تريد مسح كل تقدمك والبدء من جديد؟")){ S=fresh(); save(); location.hash="#/"; route(); } };
 
+  $("#sfxc").onchange=e=>{ try{ localStorage.setItem("englishPath.sfx", e.target.checked?"1":"0"); }catch(x){} if(e.target.checked) sfx("ok"); };
   const st=$("#elst"), vbox=$("#elv"); let stop=false;
   const refreshSt=async()=>{ const n=await idbCount(); st.textContent=n?("أصوات محفوظة في هاتفك: "+n):""; };
   function drawVoices(list){
