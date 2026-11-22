@@ -586,7 +586,25 @@ function pickVoice(){
   return vs.sort((a,b)=>score(b)-score(a))[0];
 }
 if("speechSynthesis" in window){ speechSynthesis.onvoiceschanged=()=>{ _voice=pickVoice(); }; _voice=pickVoice(); }
-function speak(t){ if(!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); if(!_voice) _voice=pickVoice(); const u=new SpeechSynthesisUtterance(t); u.lang=_voice?_voice.lang:"en-US"; if(_voice){ try{ u.voice=_voice; }catch(e){} } u.rate=.92; u.pitch=1; speechSynthesis.speak(u);}catch(e){} }
+function speakLocal(t){ if(!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); if(!_voice) _voice=pickVoice(); const u=new SpeechSynthesisUtterance(t); u.lang=_voice?_voice.lang:"en-US"; if(_voice){ try{ u.voice=_voice; }catch(e){} } u.rate=.92; u.pitch=1; speechSynthesis.speak(u);}catch(e){} }
+
+
+/* ---- صوت بشري عبر خدمة TTS على الإنترنت، مع رجوع تلقائي لصوت الجهاز ---- */
+let _au=null, _tok=0, _netBad=0;
+function stopSpeech(){ _tok++; try{ if(_au){ _au.pause(); _au.onended=_au.onerror=null; _au=null; } }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} }
+function ttsChunks(t){ const out=[]; let cur=""; (String(t).match(/[^.!?]+[.!?]*\s*/g)||[String(t)]).forEach(x=>{ if(cur && (cur+x).length>170){ out.push(cur.trim()); cur=x; } else cur+=x; }); if(cur.trim()) out.push(cur.trim()); return out; }
+const ttsUrl=q=>"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q="+encodeURIComponent(q);
+function playChunk(src){ return new Promise((res,rej)=>{ const a=new Audio(); _au=a; let started=false;
+  const tm=setTimeout(()=>{ if(!started) rej(new Error("timeout")); },5000);
+  a.onplaying=()=>{ started=true; clearTimeout(tm); };
+  a.onended=()=>{ clearTimeout(tm); res(); }; a.onerror=()=>{ clearTimeout(tm); rej(new Error("audio")); };
+  a.src=src; const pr=a.play(); if(pr&&pr.catch) pr.catch(e=>{ clearTimeout(tm); rej(e); }); }); }
+async function speak(t){
+  stopSpeech(); const tok=_tok;
+  if(!navigator.onLine || Date.now()-_netBad<60000){ speakLocal(t); return; }
+  try{ for(const c of ttsChunks(t)){ if(tok!==_tok) return; await playChunk(ttsUrl(c)); } }
+  catch(e){ if(tok!==_tok) return; _netBad=Date.now(); speakLocal(t); }
+}
 
 /* ---- أيقونات SVG بدل الإيموجي ---- */
 const ICONS={
@@ -1093,7 +1111,7 @@ function showSpeech(res, sc){
 function micTry(row){
   const target=row.dataset.t, res=row.querySelector(".res"), btn=row.querySelector("[data-mic]");
   if(!SR){ res.innerHTML=`<div class="note">متصفحك لا يدعم التعرّف على الصوت. جرّب Chrome على الجوال أو الكمبيوتر.</div>`; return; }
-  try{ speechSynthesis.cancel(); }catch(e){}
+  stopSpeech();
   let got=false;
   const r=new SR(); r.lang="en-US"; r.interimResults=false; r.maxAlternatives=3;
   btn.disabled=true; res.innerHTML=`<div class="note">🎙️ تكلّم الآن...</div>`;
