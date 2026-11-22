@@ -619,7 +619,9 @@ async function elFetch(text){
   if(!r.ok){ const e=new Error("el"+r.status); e.status=r.status; throw e; }
   return await r.blob();
 }
-async function elBlob(text){ text=text.trim(); const k=fnv(text); let b=await idbGet(k); if(b) return b; b=await elFetch(text); if(b) await idbPut(k,b); return b; }
+const elKey=t=>fnv((elCfg().voice||"")+"|"+String(t).trim());
+async function idbClear(){ try{ const db=await idb(); await new Promise(res=>{ const t=db.transaction("a","readwrite"); t.objectStore("a").clear(); t.oncomplete=res; t.onerror=res; t.onabort=res; }); }catch(e){} }
+async function elBlob(text){ text=text.trim(); const k=elKey(text); let b=await idbGet(k); if(b) return b; b=await elFetch(text); if(b) await idbPut(k,b); return b; }
 function elErrText(e){ return e&&e.status===401?"مفتاح ElevenLabs غير صحيح":e&&(e.status===402||e.status===429)?"انتهى رصيد ElevenLabs أو الطلبات كثيرة":"تعذّر الاتصال بـ ElevenLabs"; }
 let _elBad=0;
 /* الترتيب: صوت محفوظ في الهاتف ← ملف audio/ ← ElevenLabs مباشرة ← صوت الإنترنت ← صوت الجهاز */
@@ -628,7 +630,7 @@ async function speak(t){
   const units=Array.isArray(t)?t:(String(t).length<=200?[String(t)]:ttsChunks(t));
   for(let i=0;i<units.length;i++){
     if(tok!==_tok) return;
-    const u=units[i], k=fnv(String(u).trim());
+    const u=units[i], k=elKey(u);
     const cached=await idbGet(k); if(tok!==_tok) return;
     if(cached){ try{ await playChunk(URL.createObjectURL(cached)); continue; }catch(e){ if(tok!==_tok) return; } }
     try{ await playChunk(audioUrl(u)); continue; }catch(e){ if(tok!==_tok) return; }
@@ -1264,16 +1266,18 @@ function renderMe(){
     vbox.innerHTML=`<label class="muted small" style="display:block;margin-top:10px">اختر الصوت</label>
       <select class="txt" id="elsel">${list.map(v=>`<option value="${esc(v.id)}" ${v.id===cur?"selected":""}>${esc(v.name)}${v.tag?" · "+esc(v.tag):""}</option>`).join("")}</select>
       <div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost" id="elt" style="margin:0">🔊 جرّب الصوت</button><button class="btn" id="ela" style="margin:0">حمّل كل الأصوات</button></div>
-      <p class="muted small" id="elinfo"></p>`;
-    const sel=$("#elsel"); const saveV=()=>{ const cc=elCfg(); cc.voice=sel.value; elSave(cc); }; saveV(); sel.onchange=saveV;
+      <p class="muted small" id="elinfo"></p><div class="center"><button class="link" id="elx">مسح الأصوات المحفوظة</button></div>`;
+    const sel=$("#elsel"); const saveV=()=>{ const cc=elCfg(); cc.voice=sel.value; elSave(cc); }; saveV(); sel.onchange=()=>{ saveV(); st.textContent="تم تغيير الصوت. اضغط «جرّب الصوت»."; updInfo(); };
+    $("#elx").onclick=async()=>{ if(confirm("مسح كل الأصوات المحفوظة في هذا الهاتف؟")){ await idbClear(); await refreshSt(); updInfo(); st.textContent="تم المسح."; } };
     $("#elt").onclick=async()=>{ st.textContent="جاري التوليد…"; try{ const b=await elBlob("Hello! Nice to meet you. How are you today?"); await refreshSt(); if(b) await playChunk(URL.createObjectURL(b)); }catch(e){ st.textContent=elErrText(e); } };
     const texts=coreSpeechTexts();
-    (async()=>{ let miss=0,ch=0; for(const t of texts){ if(!(await idbGet(fnv(t)))){ miss++; ch+=t.length; } } $("#elinfo").textContent=miss?("ناقص "+miss+" صوتًا (≈ "+Math.ceil(ch*0.5)+" رصيد). يمكنك تركه: كل صوت يُولَّد ويُحفظ تلقائيًا عند أول استخدام."):"كل الأصوات الأساسية محفوظة في هاتفك ✓"; })();
+    const updInfo=async()=>{ let miss=0,ch=0; for(const t of texts){ if(!(await idbGet(elKey(t)))){ miss++; ch+=t.length; } } $("#elinfo").textContent=miss?("ناقص "+miss+" صوتًا (≈ "+Math.ceil(ch*0.5)+" رصيد). يمكنك تركه: كل صوت يُولَّد ويُحفظ تلقائيًا عند أول استخدام."):"كل الأصوات الأساسية محفوظة في هاتفك ✓"; };
+    updInfo();
     $("#ela").onclick=async()=>{
       const btn=$("#ela"); if(btn.dataset.run){ stop=true; return; }
       btn.dataset.run=1; btn.textContent="إيقاف"; stop=false; let done=0,fail=0;
       for(let i=0;i<texts.length&&!stop;i++){
-        const t=texts[i]; if(await idbGet(fnv(t))){ done++; continue; }
+        const t=texts[i]; if(await idbGet(elKey(t))){ done++; continue; }
         try{ await elBlob(t); done++; }catch(e){ if(e.status===401||e.status===402||e.status===429){ st.textContent=elErrText(e)+" — توقّف عند "+done+" من "+texts.length; fail=1; break; } }
         st.textContent="جاري التحميل: "+done+" / "+texts.length;
       }
