@@ -1041,7 +1041,7 @@ function startReview(){
 }
 function drawReview(){
   if(RV.i>=RV.keys.length){
-    S.log[dkey()]=true; save();
+    S.log[dkey()]=true; save(); if(RV.ok>=RV.keys.length*0.75) setTimeout(()=>sfx("win"),400);
     view.innerHTML=`<div class="card"><div class="big">${RV.ok>=RV.keys.length*0.75?"🎉":"💪"}</div><h1 class="center">${RV.ok} / ${RV.keys.length}</h1>
       <p class="center">${RV.ok===RV.keys.length?"ما شاء الله، كلها صح!":"الكلمات الخاطئة سترجع لك غدًا."}</p>
       <a class="btn ok" href="#/">الرئيسية</a>${dueList().length?`<button class="btn ghost" id="more">راجع كلمات أخرى (${dueList().length})</button>`:""}</div>`;
@@ -1066,7 +1066,7 @@ function drawReview(){
     const ok=o[idx]===w.ar;
     view.querySelectorAll(".opt").forEach((x,j)=>{ x.disabled=true; if(o[j]===w.ar) x.classList.add("right"); else if(j===idx) x.classList.add("wrong"); });
     if(ok){ RV.ok++; w.box=Math.min(w.box+1,4); w.due=addDays(INTERVALS[w.box]); } else { w.box=0; w.due=addDays(1); }
-    save(); $("#nx").style.display="block";
+    sfx(ok?"ok":"bad"); save(); $("#nx").style.display="block";
   });
   $("#nx").onclick=()=>{ RV.i++; drawReview(); };
 }
