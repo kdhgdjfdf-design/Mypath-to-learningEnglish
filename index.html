@@ -767,6 +767,7 @@ function route(){
   else if(page==="quiz" && byId(id)) startQuiz(id);
   else if(page==="ex" && byId(id) && +a>=1 && +a<=DAYS) openEx(id, +a);
   else if(page==="review") startReview();
+  else if(page==="speak") startSpeak();
   else if(page==="explore"){ nav="explore"; renderExplore(); }
   else if(page==="progress"){ nav="progress"; renderProgress(); }
   else if(page==="me"){ nav="me"; renderMe(); }
@@ -886,10 +887,10 @@ function renderHome(){
     ${levelsMap()}
     <div class="sec"><h2>كلمة اليوم</h2></div>
     <div class="card wod"><div><b>${esc(wod[0])}</b><span class="muted">${esc(wod[1])}</span></div><button class="spk" data-say="${esc(wod[0])}" aria-label="استمع">🔊</button></div>
-    <div class="sec"><h2>قريبًا</h2></div>
+    <div class="sec"><h2>المزيد</h2></div>
     <div class="soon-grid">
       <div class="soon"><div class="soonic">💬</div><h3>محادثة بالذكاء الاصطناعي</h3><span class="tag soon">قريبًا</span></div>
-      <div class="soon"><div class="soonic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon">قريبًا</span></div>
+      <a class="soon" href="#/speak" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
     </div>`;
   $("#go").onclick=()=>{ location.hash = cd ? "#/day/"+l.id+"/"+cd : (passed(l.id) ? "#/level/"+l.id : "#/quiz/"+l.id); };
   view.querySelectorAll(".lv").forEach(b=>b.onclick=()=>openSheet(+b.dataset.i));
@@ -1189,6 +1190,70 @@ function micTry(row){
   r.onerror=e=>{ got=true; res.innerHTML=`<div class="note">${e.error==="not-allowed"?"اسمح للمتصفح باستخدام المايكروفون ثم أعد المحاولة.":e.error==="no-speech"?"ما سمعت شيئاً، حاول مرة ثانية.":"تعذّر التسجيل، حاول مجددًا."}</div>`; };
   r.onend=()=>{ btn.disabled=false; if(!got) res.innerHTML=`<div class="note">ما سمعت شيئاً، حاول مرة ثانية.</div>`; };
   try{ r.start(); }catch(e){ btn.disabled=false; res.innerHTML=`<div class="note">تعذّر بدء التسجيل.</div>`; }
+}
+
+/* ---- شاشة تدريب النطق: جلسة من 8 جمل، الأضعف أولًا ---- */
+let SP=null;
+function speakPool(){
+  const out=[], seen=new Set(), add=r=>{ if(!seen.has(r[0])){ seen.add(r[0]); out.push({en:r[0],ar:r[1]}); } };
+  LEVELS.forEach((l,i)=>{ if(!levelUnlocked(i)) return; daysList(l.id).forEach(d=>{ (getDay(l,d).read||[]).forEach(add); }); });
+  if(out.length<4) for(let d=1;d<=5;d++) (getDay(LEVELS[0],d).read||[]).forEach(add);
+  return out;
+}
+function startSpeak(){
+  S.sp=S.sp||{};
+  if(!SR){ view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a><div class="card"><div class="note">متصفحك لا يدعم التعرّف على الصوت. جرّب Chrome على الجوال أو الكمبيوتر.</div></div>`; return; }
+  const pool=shuffle(speakPool()).sort((a,b)=>((S.sp[a.en]||{b:-1}).b)-((S.sp[b.en]||{b:-1}).b));
+  SP={items:shuffle(pool.slice(0,8)), i:0, res:[], weak:new Set()};
+  drawSpeak();
+}
+function listenOnce(target, done){
+  stopSpeech(); let got=false;
+  const r=new SR(); r.lang="en-US"; r.interimResults=false; r.maxAlternatives=3;
+  r.onresult=e=>{ got=true; done(null, scoreSpeech(target, Array.from(e.results[0]).map(x=>x.transcript))); };
+  r.onerror=e=>{ got=true; done(e.error||"error"); };
+  r.onend=()=>{ if(!got) done("no-speech"); };
+  try{ r.start(); }catch(e){ done("start"); }
+}
+function drawSpeak(){
+  if(SP.i>=SP.items.length) return speakResult();
+  const it=SP.items[SP.i], n=SP.items.length;
+  view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a>
+    <div class="card"><div class="muted small">تدريب النطق · ${SP.i+1} من ${n}</div>
+      <div class="bar"><i style="width:${SP.i/n*100}%"></i></div>
+      <div class="q ltr" style="font-size:1.45rem;margin:16px 0 6px">${esc(it.en)}</div>
+      <div class="muted" style="margin-bottom:14px">${esc(it.ar)}</div>
+      <div style="display:flex;gap:8px"><button class="btn ghost" id="sl" style="margin:0">🔊 استمع أولًا</button><button class="btn" id="sm" style="margin:0">🎤 تكلّم</button></div>
+      <div id="sres" style="margin-top:14px"></div>
+      <div id="sbt" style="display:none;margin-top:10px"><button class="btn ghost" id="sr">🔁 حاول مرة أخرى</button><button class="btn" id="sn">${SP.i===n-1?"النتيجة":"التالي"}</button></div>
+    </div>`;
+  const res=$("#sres"), mic=$("#sm");
+  $("#sl").onclick=()=>speak(it.en);
+  const go=()=>{
+    mic.disabled=true; res.innerHTML=`<div class="note">🎙️ تكلّم الآن...</div>`;
+    listenOnce(it.en,(err,sc)=>{
+      mic.disabled=false;
+      if(err){ res.innerHTML=`<div class="note">${err==="not-allowed"?"اسمح للمتصفح باستخدام المايكروفون ثم أعد المحاولة.":err==="no-speech"?"ما سمعت شيئًا، حاول مرة ثانية.":"تعذّر التسجيل، حاول مرة ثانية."}</div>`; return; }
+      showSpeech(res, sc);
+      const rec=S.sp[it.en]||{b:0,n:0}; rec.n++; rec.b=Math.max(rec.b,sc.pct); S.sp[it.en]=rec; S.log[dkey()]=true; save();
+      SP.res[SP.i]=Math.max(SP.res[SP.i]||0, sc.pct);
+      sc.tw.forEach((x,k)=>{ if(!sc.marks[k]&&x.n&&x.n.length>=3) SP.weak.add(x.n); });
+      if(sc.pct>=85) sfx("ok"); else if(sc.pct<50) sfx("bad");
+      $("#sbt").style.display="block";
+    });
+  };
+  mic.onclick=go; $("#sr").onclick=go;
+  $("#sn").onclick=()=>{ SP.i++; drawSpeak(); };
+}
+function speakResult(){
+  const n=SP.items.length, vals=SP.items.map((_,i)=>SP.res[i]||0), avg=Math.round(vals.reduce((a,b)=>a+b,0)/n), good=vals.filter(v=>v>=85).length, weak=[...SP.weak].slice(0,12);
+  if(avg>=75) setTimeout(()=>sfx("win"),300);
+  view.innerHTML=`<div class="card"><div class="big">${avg>=75?"🎉":"💪"}</div><h1 class="center">${avg}%</h1>
+    <p class="center">${good} من ${n} جمل نطقتها بوضوح.</p>
+    ${weak.length?`<div class="tip"><b>كلمات تحتاج تدريبًا (اضغط للاستماع):</b><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px">${weak.map(w=>`<button class="chip2" data-say="${esc(w)}">${esc(w)}</button>`).join("")}</div></div>`:""}
+    <button class="btn" id="sa">🔁 جلسة جديدة</button><a class="btn ghost" href="#/">الرئيسية</a></div>`;
+  view.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say));
+  $("#sa").onclick=startSpeak;
 }
 
 /* =====================================================================
