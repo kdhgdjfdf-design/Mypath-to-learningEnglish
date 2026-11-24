@@ -1325,9 +1325,11 @@ function startChat(){
     <p class="muted">اختر موقفًا وتكلّم أو اكتب بالإنجليزية. أصحّح لك أخطاءك بالعربية.</p>
     ${top.length?`<div class="tip"><b>أخطاؤك المتكررة:</b><br>${top.map(t=>"• "+esc(t.ar)+" <span class=\"muted small\">("+t.c+")</span>").join("<br>")}</div>`:""}
     ${SCEN.map(s=>`<button class="card" data-sc="${s.id}" style="display:block;width:100%;text-align:right;border:0;cursor:pointer;margin-bottom:10px"><b>${esc(s.t)}</b><div class="muted small">${esc(s.d)}</div></button>`).join("")}
+    <button class="card" data-sc="coach" style="display:block;width:100%;text-align:right;border:0;cursor:pointer;margin-bottom:10px;${c.key?"":"opacity:.6"}"><b>اسأل المدرّب</b><div class="muted small">${c.key?"اسأل بالعربية عن قاعدة أو كلمة أو اطلب تصحيح جملة":"يحتاج مفتاح Gemini المجاني (من تبويب حسابي)"}</div></button>
     <button class="card" data-sc="free" style="display:block;width:100%;text-align:right;border:0;cursor:pointer;${c.key?"":"opacity:.6"}"><b>محادثة حرّة</b><div class="muted small">${c.key?"تحدّث في أي موضوع مع الذكاء الاصطناعي":"تحتاج مفتاح Gemini المجاني (من تبويب حسابي)"}</div></button>`;
   view.querySelectorAll("[data-sc]").forEach(b=>b.onclick=()=>{
-    if(b.dataset.sc==="free"){ if(!gCfg().key){ toast("أضف مفتاح Gemini من «حسابي» أولًا"); return; } openChat({id:"free",t:"محادثة حرّة",role:"a friendly conversation partner who chats about anything the learner likes (daily life, hobbies, travel, work)",steps:[]}); }
+    if(b.dataset.sc==="coach"){ if(!gCfg().key){ toast("أضف مفتاح Gemini من «حسابي» أولًا"); return; } openChat({id:"coach",t:"اسأل المدرّب",role:"",steps:[]}); }
+    else if(b.dataset.sc==="free"){ if(!gCfg().key){ toast("أضف مفتاح Gemini من «حسابي» أولًا"); return; } openChat({id:"free",t:"محادثة حرّة",role:"a friendly conversation partner who chats about anything the learner likes (daily life, hobbies, travel, work)",steps:[]}); }
     else openChat(SCEN.find(s=>s.id===b.dataset.sc));
   });
 }
@@ -1343,21 +1345,40 @@ function openChat(sc){
       <div style="display:flex;gap:8px"><input class="txt" id="cin" dir="ltr" placeholder="Type in English..." autocomplete="off" style="flex:1"><button class="spk mic" id="cmic" aria-label="تكلّم">🎤</button><button class="btn" id="csend" style="margin:0;width:auto;padding:0 18px">إرسال</button></div></div>`;
   $("#csend").onclick=sendChat; $("#cin").onkeydown=e=>{ if(e.key==="Enter") sendChat(); };
   $("#cmic").onclick=()=>{ if(!SR){ toast("متصفحك لا يدعم التعرّف على الصوت"); return; } const b=$("#cmic"); b.disabled=true; $("#chint").textContent="تكلّم الآن..."; listenOnce("",(err,sc2)=>{ b.disabled=false; $("#chint").textContent=sc2||err?"":""; if(sc2&&sc2.heard){ $("#cin").value=sc2.heard; sendChat(); } else { $("#chint").textContent="ما سمعت شيئًا، حاول مرة ثانية."; } }); };
+  if(sc.id==="coach"){ bubble("b",`<span>اسألني أي شيء عن الإنجليزية: قاعدة، معنى كلمة، الفرق بين كلمتين، أو اكتب جملة وأصحّحها لك.</span>`); $("#cin").placeholder="اكتب سؤالك..."; $("#cin").dir="auto"; return; }
   nextBot(true);
 }
 async function aiCall(sc,hist,first){
-  const cfg=gCfg(), mem=memTop().map(t=>t.id).join(", ");
-  const sys=`You are ${sc.role}. Role-play with an Arabic-speaking English learner at CEFR level ${levelTagNow()}. Use simple words for that level. Reply in 1-2 short sentences and end with a question to keep the conversation going. Never use Arabic in "reply". Look at the learner's last message: if it has a grammar or word mistake, put the corrected sentence in "fix" (otherwise empty string) and a one-sentence explanation in Arabic in "tip_ar" (otherwise empty). ${mem?"The learner often makes these mistakes: "+mem+".":""} Return ONLY JSON: {"reply":"...","fix":"...","tip_ar":"..."}`;
-  const contents=first?[{role:"user",parts:[{text:"Start the conversation."}]}]:hist.map(m=>({role:m.r==="u"?"user":"model",parts:[{text:m.t}]}));
+  const cfg=gCfg(), mem=memTop().map(t=>t.id).join(", "), coach=sc.id==="coach";
+  const sys=coach
+    ? `You are a friendly, patient English teacher for Arabic speakers (learner level ${levelTagNow()}). Answer in simple Arabic, briefly and clearly. Give 2-3 short English examples, each with its Arabic translation. If the learner sends an English sentence, correct it and explain the mistake in Arabic. Do not write long essays.`
+    : `You are ${sc.role}. Role-play with an Arabic-speaking English learner at CEFR level ${levelTagNow()}. Use simple words for that level. Reply in 1-2 short sentences and end with a question to keep the conversation going. Never use Arabic in "reply". Look at the learner's last message: if it has a grammar or word mistake, put the corrected sentence in "fix" (otherwise empty string) and a one-sentence explanation in Arabic in "tip_ar" (otherwise empty). ${mem?"The learner often makes these mistakes: "+mem+".":""} Return ONLY JSON: {"reply":"...","fix":"...","tip_ar":"..."}`;
+  /* Gemini يشترط أن تبدأ المحادثة برسالة مستخدم وأن تتناوب الأدوار */
+  const contents=coach?[]:[{role:"user",parts:[{text:"Start the conversation."}]}];
+  hist.forEach(m=>{ const role=m.r==="u"?"user":"model", last=contents[contents.length-1];
+    if(last&&last.role===role) last.parts[0].text+="\n"+m.t; else contents.push({role,parts:[{text:m.t}]}); });
+  const gen=coach?{temperature:.6,maxOutputTokens:700}:{responseMimeType:"application/json",temperature:.8,maxOutputTokens:300};
   const models=["gemini-flash-latest","gemini-flash-lite-latest"]; let lastErr=null;
   for(const m of models){
-    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:{responseMimeType:"application/json",temperature:.8,maxOutputTokens:300}})});
-    if(r.ok){ const j=await r.json(); const txt=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join(""); try{ const o=JSON.parse(txt); return {reply:String(o.reply||"").trim(),fix:String(o.fix||"").trim(),tip:String(o.tip_ar||"").trim()}; }catch(e){ return {reply:txt.trim(),fix:"",tip:""}; } }
-    lastErr=new Error("g"+r.status); lastErr.status=r.status; if(r.status===400||r.status===401||r.status===403||r.status===429) break;
+    for(let attempt=0;attempt<2;attempt++){
+      let r;
+      try{ r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:gen})}); }
+      catch(e){ lastErr=new Error("net"); lastErr.status=0; await new Promise(z=>setTimeout(z,700)); continue; }
+      if(r.ok){
+        const j=await r.json(); const txt=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join("").trim();
+        if(!txt){ lastErr=new Error("empty"); lastErr.status=-1; break; }
+        if(coach) return {reply:txt,fix:"",tip:""};
+        try{ const o=JSON.parse(txt.replace(/^```json|```$/g,"")); return {reply:String(o.reply||"").trim()||txt,fix:String(o.fix||"").trim(),tip:String(o.tip_ar||"").trim()}; }catch(e){ return {reply:txt,fix:"",tip:""}; }
+      }
+      lastErr=new Error("g"+r.status); lastErr.status=r.status;
+      if(r.status===400||r.status===401||r.status===403||r.status===429) throw lastErr;
+      if(r.status>=500){ await new Promise(z=>setTimeout(z,800)); continue; }
+      break;
+    }
   }
   throw lastErr;
 }
-function gErrText(e){ const s=e&&e.status; return s===400||s===401||s===403?"مفتاح Gemini غير صحيح أو غير مفعّل":s===429?"انتهت الحصة المجانية الآن، جرّب لاحقًا":"تعذّر الاتصال بالذكاء الاصطناعي"; }
+function gErrText(e){ const s=e&&e.status; return s===400||s===401||s===403?"مفتاح Gemini غير صحيح أو غير مفعّل ("+s+")":s===429?"انتهت الحصة المجانية أو الطلبات كثيرة الآن، جرّب بعد قليل (429)":s===0?"لا يوجد اتصال بالإنترنت":"تعذّر الحصول على رد من الذكاء الاصطناعي ("+(s===undefined?"؟":s)+")"; }
 async function nextBot(first){
   if(CH.sc.id!=="free" && !CH.ai){ scriptedBot(first); return; }
   if(CH.sc.id!=="free" && CH.aiBad){ scriptedBot(first); return; }
@@ -1365,10 +1386,11 @@ async function nextBot(first){
   try{
     const o=await aiCall(CH.sc,CH.hist,first); t.remove();
     if(o.fix&&CH.lastUser){ addFix(CH.lastUser,o.fix,o.tip); }
-    CH.hist.push({r:"b",t:o.reply}); botBubble(o.reply);
+    CH.hist.push({r:"b",t:o.reply});
+    if(CH.sc.id==="coach") bubble("b",`<span style="white-space:pre-wrap">${esc(o.reply)}</span>`); else botBubble(o.reply);
   }catch(e){
     t.remove(); toast(gErrText(e));
-    if(CH.sc.id==="free"){ bubble("b",`<span class="muted small">${esc(gErrText(e))}. جرّب المواقف الجاهزة من القائمة.</span>`); }
+    if(CH.sc.id==="free"||CH.sc.id==="coach"){ bubble("b",`<span class="muted small">${esc(gErrText(e))}</span>`); CH.hist.pop(); }
     else { CH.aiBad=true; scriptedBot(first); }
   }
   CH.busy=false; $("#cin")&&$("#cin").focus();
@@ -1385,17 +1407,19 @@ async function sendChat(){
   if(!CH||CH.busy) return;
   const inp=$("#cin"), text=inp.value.trim(); if(!text) return; inp.value="";
   stopSpeech();
-  const ub=bubble("u",`<span dir="ltr" style="display:block;text-align:left">${esc(text)}</span>`); CH.lastUser=ub; CH.turns++;
+  const ub=bubble("u",`<span dir="${CH.sc.id==="coach"?"auto":"ltr"}" style="display:block;text-align:start">${esc(text)}</span>`); CH.lastUser=ub; CH.turns++;
   CH.hist.push({r:"u",t:text});
-  const errs=analyze(text);
-  if(errs.length){ CH.mistakes+=errs.length; memAdd(errs); errs.forEach(x=>{ const d=document.createElement("div"); d.className="cfix"; d.innerHTML=`<b>تنبيه:</b> ${esc(x.ar)}`; ub.after(d); }); sfx("bad"); }
+  const isFree=CH.sc.id==="free"||CH.sc.id==="coach", errs=CH.sc.id==="coach"?[]:analyze(text);
+  if(CH.sc.id==="coach"){}
+  else if(errs.length){ CH.mistakes+=errs.length; memAdd(errs); errs.forEach(x=>{ const d=document.createElement("div"); d.className="cfix"; d.innerHTML=`<b>تنبيه:</b> ${esc(x.ar)}`; ub.after(d); }); sfx("bad"); }
   else sfx("ok");
   S.log[dkey()]=true; save();
-  if(CH.sc.id!=="free" && (!CH.ai||CH.aiBad)){
+  if(isFree){}
+  else if(CH.sc.id!=="free" && (!CH.ai||CH.aiBad)){
     const s=CH.sc.steps[CH.step], low=text.toLowerCase();
     if(s && !s.kw.some(k=>low.includes(k)) && !errs.length){ const d=document.createElement("div"); d.className="cfix"; d.innerHTML=`<b>فكرة:</b> <span dir="ltr">${esc(s.h)}</span>`; ub.after(d); }
     CH.step++;
-  } else if(CH.sc.id!=="free"){ CH.step++; if(CH.step>=CH.sc.steps.length+1){ endChat(); return; } }
+  } else { CH.step++; if(CH.step>=CH.sc.steps.length+1){ endChat(); return; } }
   await nextBot(false);
 }
 function endChat(){
