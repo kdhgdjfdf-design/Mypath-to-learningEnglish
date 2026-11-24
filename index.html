@@ -77,6 +77,12 @@ h3{font-size:1.02rem;margin:.1em 0;font-weight:700}
 .spk.sm{width:34px;height:34px;font-size:.9rem}
 .soon-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .soon{background:rgba(255,255,255,.6);border-radius:20px;padding:14px;min-height:120px}
+.cmsgs{display:flex;flex-direction:column;gap:2px;padding-bottom:150px}
+.cb{max-width:88%;padding:10px 14px;border-radius:16px;line-height:1.5;margin-top:6px}
+.cb.b{align-self:flex-end;background:#fff;box-shadow:var(--shadow)}
+.cb.u{align-self:flex-start;background:var(--blue);color:#fff}
+.cfix{align-self:flex-start;max-width:88%;background:#fff7d6;border:1px solid #f0dc8a;color:#5c4400;border-radius:12px;padding:8px 12px;font-size:.92rem;line-height:1.5}
+.cbar{position:fixed;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom));background:var(--bg,#f4f1ea);padding:10px 16px;border-top:1px solid var(--line);z-index:9}
 .soon .soonic{width:40px;height:40px;border-radius:12px;background:var(--blue-l);display:grid;place-items:center;font-size:1.2rem;margin-bottom:8px}
 
 /* buttons */
@@ -768,6 +774,7 @@ function route(){
   else if(page==="ex" && byId(id) && +a>=1 && +a<=DAYS) openEx(id, +a);
   else if(page==="review") startReview();
   else if(page==="speak") startSpeak();
+  else if(page==="chat") startChat();
   else if(page==="explore"){ nav="explore"; renderExplore(); }
   else if(page==="progress"){ nav="progress"; renderProgress(); }
   else if(page==="me"){ nav="me"; renderMe(); }
@@ -889,7 +896,7 @@ function renderHome(){
     <div class="card wod"><div><b>${esc(wod[0])}</b><span class="muted">${esc(wod[1])}</span></div><button class="spk" data-say="${esc(wod[0])}" aria-label="استمع">🔊</button></div>
     <div class="sec"><h2>المزيد</h2></div>
     <div class="soon-grid">
-      <div class="soon"><div class="soonic">💬</div><h3>محادثة بالذكاء الاصطناعي</h3><span class="tag soon">قريبًا</span></div>
+      <a class="soon" href="#/chat" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">💬</div><h3>محادثة وتصحيح الأخطاء</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
       <a class="soon" href="#/speak" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
     </div>`;
   $("#go").onclick=()=>{ location.hash = cd ? "#/day/"+l.id+"/"+cd : (passed(l.id) ? "#/level/"+l.id : "#/quiz/"+l.id); };
@@ -1257,6 +1264,148 @@ function speakResult(){
 }
 
 /* =====================================================================
+   مدرّب المحادثة: محلّل أخطاء محلي + سيناريوهات جاهزة + ذكاء اصطناعي مجاني اختياري (Gemini)
+   ===================================================================== */
+const GK="englishPath.gem";
+const gCfg=()=>{ try{ return JSON.parse(localStorage.getItem(GK)||"{}"); }catch(e){ return {}; } };
+const gSave=c=>{ try{ localStorage.setItem(GK,JSON.stringify(c)); }catch(e){} };
+
+/* المحلّل: أخطاء شائعة عند الناطقين بالعربية */
+const RULES=[
+ {id:"am_verb",re:/\bi am (agree|disagree|know|understand|like|love|want|need|have)\b/i,ar:"agree وبقية هذه الأفعال لا تحتاج am. قل: I agree / I know / I like."},
+ {id:"no_be",re:/\b(i|you|we|they) (from|student|teacher|happy|tired|hungry|fine|ok|ready|busy|sad)\b/i,ar:"ينقص الفعل be. قل: I am from ... / I am happy / you are ...",test:m=>true},
+ {id:"have_age",re:/\bi have (\d+|\w+) years?( old)?\b/i,ar:"العمر في الإنجليزية مع am وليس have. قل: I am 20 years old."},
+ {id:"third_s",re:/\b(he|she|it) (go|do|have|like|want|live|work|play|eat|drink|study|need|love|speak|come|make|know|think|see|get|take|read|write|watch|help|use)\b/i,ar:"مع he / she / it نضيف s للفعل. مثال: he goes / she likes / he has."},
+ {id:"dont_3rd",re:/\b(he|she|it) don'?t\b/i,ar:"مع he / she / it نقول doesn't وليس don't."},
+ {id:"be_form",re:/\b(i is|i are|you is|we is|they is|he are|she are|it are)\b/i,ar:"تصريف be: I am · you/we/they are · he/she/it is."},
+ {id:"article",re:/\bi am (a )?(student|teacher|doctor|engineer|nurse|driver|worker)\b/i,test:m=>!/\ba /i.test(m[0]),ar:"قبل المهنة نضع a / an. قل: I am a student."},
+ {id:"want_to",re:/\bi (want|need|like) (go|eat|drink|buy|see|learn|speak|travel|sleep)\b/i,ar:"بعد want / need نضيف to قبل الفعل. قل: I want to go."},
+ {id:"did_base",re:/\b(did (went|ate|saw|came|had|took|got|made)|didn'?t (went|ate|saw|came|had|took|got|made))\b/i,ar:"بعد did / didn't يرجع الفعل لأصله. قل: I didn't go / Did you eat?"},
+ {id:"past_wrong",re:/\b(goed|eated|buyed|comed|haved|seeed|taked|maked|writed)\b/i,ar:"هذا الفعل شاذ في الماضي: went / ate / bought / came / had / saw / took / made / wrote."},
+ {id:"more_good",re:/\bmore (good|big|small|fast|cheap|nice)\b/i,ar:"للصفات القصيرة نضيف er، و good تصبح better. قل: bigger / better."},
+ {id:"very_like",re:/\bi very (like|love|want)\b/i,ar:"very لا تأتي قبل الفعل. قل: I like it very much / I really like it."},
+ {id:"low_i",re:/(^|[\s,.!?])i(\s|')/,case:true,ar:"ضمير المتكلم I يُكتب دائمًا بحرف كبير."},
+ {id:"arabic",re:/[؀-ۿ]/,ar:"اكتب جوابك بالإنجليزية (حتى لو جملة بسيطة)."}
+];
+function analyze(text){
+  const out=[];
+  RULES.forEach(r=>{ const m=r.case?text.match(r.re):text.match(r.re); if(m && (!r.test||r.test(m))) out.push({id:r.id,ar:r.ar}); });
+  return out;
+}
+function memAdd(list){ S.mem=S.mem||{err:{}}; list.forEach(x=>{ if(x.id==="arabic"||x.id==="low_i") return; S.mem.err[x.id]=(S.mem.err[x.id]||0)+1; }); save(); }
+function memTop(n=3){ const e=(S.mem&&S.mem.err)||{}; return Object.entries(e).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([id,c])=>{ const r=RULES.find(x=>x.id===id); return {id,c,ar:r?r.ar:id}; }); }
+
+/* السيناريوهات الجاهزة (تعمل بدون إنترنت) */
+const SCEN=[
+ {id:"intro",t:"التعارف",d:"عرّف بنفسك: الاسم، البلد، العمل، العمر",role:"a friendly person called Sam who just met the learner and asks about name, country, job or study, age and hobbies",steps:[
+  {b:"Hi! I'm Sam. What's your name?",h:"My name is ...",kw:["name","my","i am","i'm"]},
+  {b:"Nice to meet you! Where are you from?",h:"I am from ...",kw:["from","i am","i'm"]},
+  {b:"Cool! Are you a student, or do you work?",h:"I am a student. / I am an engineer.",kw:["student","work","teacher","engineer","doctor","am","i'm"]},
+  {b:"How old are you?",h:"I am ... years old.",kw:["old","years","am","i'm"]},
+  {b:"Do you like learning English?",h:"Yes, I like English.",kw:["yes","like","love","no"]}],end:"It was great talking to you. See you soon!"},
+ {id:"rest",t:"في المطعم",d:"اطلب طعامًا وشرابًا وادفع الحساب",role:"a polite waiter in a restaurant taking the learner's order",steps:[
+  {b:"Welcome! A table for how many people?",h:"A table for two, please.",kw:["table","two","one","three","for","please"]},
+  {b:"Here is the menu. What would you like to eat?",h:"I would like ..., please.",kw:["like","want","have","please","chicken","pizza","burger","rice","salad"]},
+  {b:"Good choice. And what would you like to drink?",h:"I would like water, please.",kw:["water","juice","tea","coffee","like","drink","cola"]},
+  {b:"Anything else for you?",h:"No, thank you. That's all.",kw:["no","thank","that","yes","more"]},
+  {b:"Here is your food. Enjoy! Would you like the bill?",h:"Yes, the bill, please.",kw:["bill","yes","please","check","thank"]}],end:"Thank you for coming. Have a nice day!"},
+ {id:"dir",t:"السؤال عن الاتجاهات",d:"اسأل عن الطريق إلى المحطة",role:"a helpful local person giving directions to a lost tourist",steps:[
+  {b:"Excuse me, you look lost. Can I help you?",h:"Yes, please. Where is the station?",kw:["where","station","yes","please","help"]},
+  {b:"Go straight, then turn left at the bank. Do you understand?",h:"Yes, go straight and turn left.",kw:["yes","straight","left","understand","thank"]},
+  {b:"It is five minutes on foot. Do you need anything else?",h:"No, thank you very much.",kw:["no","thank","very","much","yes"]}],end:"You're welcome! Have a nice day."}
+];
+const ACKS=["Great!","Nice!","Good!","I see!","Cool!"];
+
+let CH=null;
+function levelTagNow(){ const ok=LEVELS.filter((l,i)=>levelUnlocked(i)); return ok.length?ok[ok.length-1].tag:"A1"; }
+function startChat(){
+  const c=gCfg(), top=memTop();
+  view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a>
+    <h1>محادثة</h1>
+    <p class="muted">اختر موقفًا وتكلّم أو اكتب بالإنجليزية. أصحّح لك أخطاءك بالعربية.</p>
+    ${top.length?`<div class="tip"><b>أخطاؤك المتكررة:</b><br>${top.map(t=>"• "+esc(t.ar)+" <span class=\"muted small\">("+t.c+")</span>").join("<br>")}</div>`:""}
+    ${SCEN.map(s=>`<button class="card" data-sc="${s.id}" style="display:block;width:100%;text-align:right;border:0;cursor:pointer;margin-bottom:10px"><b>${esc(s.t)}</b><div class="muted small">${esc(s.d)}</div></button>`).join("")}
+    <button class="card" data-sc="free" style="display:block;width:100%;text-align:right;border:0;cursor:pointer;${c.key?"":"opacity:.6"}"><b>محادثة حرّة</b><div class="muted small">${c.key?"تحدّث في أي موضوع مع الذكاء الاصطناعي":"تحتاج مفتاح Gemini المجاني (من تبويب حسابي)"}</div></button>`;
+  view.querySelectorAll("[data-sc]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.sc==="free"){ if(!gCfg().key){ toast("أضف مفتاح Gemini من «حسابي» أولًا"); return; } openChat({id:"free",t:"محادثة حرّة",role:"a friendly conversation partner who chats about anything the learner likes (daily life, hobbies, travel, work)",steps:[]}); }
+    else openChat(SCEN.find(s=>s.id===b.dataset.sc));
+  });
+}
+function bubble(kind,html){ const d=document.createElement("div"); d.className="cb "+kind; d.innerHTML=html; $("#cmsgs").appendChild(d); d.scrollIntoView({block:"end",behavior:"smooth"}); return d; }
+function botBubble(text){ const d=bubble("b",`<span dir="ltr" style="display:block;text-align:left">${esc(text)}</span><button class="spk sm" data-say="${esc(text)}" aria-label="استمع" style="margin-top:6px">🔊</button>`); d.querySelector("[data-say]").onclick=()=>speak(text); }
+function openChat(sc){
+  const ai=!!gCfg().key;
+  CH={sc,hist:[],step:0,busy:false,ai,aiBad:false,mistakes:0,turns:0};
+  view.innerHTML=`<a class="back" href="#/chat">→ المواقف</a>
+    <div class="muted small" style="margin:4px 0 8px">${esc(sc.t)} · ${ai?"مع الذكاء الاصطناعي":"سيناريو جاهز"}</div>
+    <div id="cmsgs" class="cmsgs"></div>
+    <div class="cbar"><div id="chint" class="muted small" style="margin-bottom:6px"></div>
+      <div style="display:flex;gap:8px"><input class="txt" id="cin" dir="ltr" placeholder="Type in English..." autocomplete="off" style="flex:1"><button class="spk mic" id="cmic" aria-label="تكلّم">🎤</button><button class="btn" id="csend" style="margin:0;width:auto;padding:0 18px">إرسال</button></div></div>`;
+  $("#csend").onclick=sendChat; $("#cin").onkeydown=e=>{ if(e.key==="Enter") sendChat(); };
+  $("#cmic").onclick=()=>{ if(!SR){ toast("متصفحك لا يدعم التعرّف على الصوت"); return; } const b=$("#cmic"); b.disabled=true; $("#chint").textContent="تكلّم الآن..."; listenOnce("",(err,sc2)=>{ b.disabled=false; $("#chint").textContent=sc2||err?"":""; if(sc2&&sc2.heard){ $("#cin").value=sc2.heard; sendChat(); } else { $("#chint").textContent="ما سمعت شيئًا، حاول مرة ثانية."; } }); };
+  nextBot(true);
+}
+async function aiCall(sc,hist,first){
+  const cfg=gCfg(), mem=memTop().map(t=>t.id).join(", ");
+  const sys=`You are ${sc.role}. Role-play with an Arabic-speaking English learner at CEFR level ${levelTagNow()}. Use simple words for that level. Reply in 1-2 short sentences and end with a question to keep the conversation going. Never use Arabic in "reply". Look at the learner's last message: if it has a grammar or word mistake, put the corrected sentence in "fix" (otherwise empty string) and a one-sentence explanation in Arabic in "tip_ar" (otherwise empty). ${mem?"The learner often makes these mistakes: "+mem+".":""} Return ONLY JSON: {"reply":"...","fix":"...","tip_ar":"..."}`;
+  const contents=first?[{role:"user",parts:[{text:"Start the conversation."}]}]:hist.map(m=>({role:m.r==="u"?"user":"model",parts:[{text:m.t}]}));
+  const models=["gemini-flash-latest","gemini-flash-lite-latest"]; let lastErr=null;
+  for(const m of models){
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="+encodeURIComponent(cfg.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:{responseMimeType:"application/json",temperature:.8,maxOutputTokens:300}})});
+    if(r.ok){ const j=await r.json(); const txt=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join(""); try{ const o=JSON.parse(txt); return {reply:String(o.reply||"").trim(),fix:String(o.fix||"").trim(),tip:String(o.tip_ar||"").trim()}; }catch(e){ return {reply:txt.trim(),fix:"",tip:""}; } }
+    lastErr=new Error("g"+r.status); lastErr.status=r.status; if(r.status===400||r.status===401||r.status===403||r.status===429) break;
+  }
+  throw lastErr;
+}
+function gErrText(e){ const s=e&&e.status; return s===400||s===401||s===403?"مفتاح Gemini غير صحيح أو غير مفعّل":s===429?"انتهت الحصة المجانية الآن، جرّب لاحقًا":"تعذّر الاتصال بالذكاء الاصطناعي"; }
+async function nextBot(first){
+  if(CH.sc.id!=="free" && !CH.ai){ scriptedBot(first); return; }
+  if(CH.sc.id!=="free" && CH.aiBad){ scriptedBot(first); return; }
+  CH.busy=true; const t=bubble("b",`<span class="muted small">...</span>`);
+  try{
+    const o=await aiCall(CH.sc,CH.hist,first); t.remove();
+    if(o.fix&&CH.lastUser){ addFix(CH.lastUser,o.fix,o.tip); }
+    CH.hist.push({r:"b",t:o.reply}); botBubble(o.reply);
+  }catch(e){
+    t.remove(); toast(gErrText(e));
+    if(CH.sc.id==="free"){ bubble("b",`<span class="muted small">${esc(gErrText(e))}. جرّب المواقف الجاهزة من القائمة.</span>`); }
+    else { CH.aiBad=true; scriptedBot(first); }
+  }
+  CH.busy=false; $("#cin")&&$("#cin").focus();
+}
+function scriptedBot(first){
+  const st=CH.sc.steps;
+  if(CH.step>=st.length){ endChat(); return; }
+  const s=st[CH.step];
+  const line=(first?"":ACKS[CH.turns%ACKS.length]+" ")+s.b;
+  CH.hist.push({r:"b",t:line}); botBubble(line); $("#chint").textContent="فكرة للرد: "+s.h;
+}
+function addFix(userBubble,fix,tip){ const d=document.createElement("div"); d.className="cfix"; d.innerHTML=`<b>تصحيح:</b> <span dir="ltr">${esc(fix)}</span>${tip?`<div class="muted small">${esc(tip)}</div>`:""}`; userBubble.after(d); }
+async function sendChat(){
+  if(!CH||CH.busy) return;
+  const inp=$("#cin"), text=inp.value.trim(); if(!text) return; inp.value="";
+  stopSpeech();
+  const ub=bubble("u",`<span dir="ltr" style="display:block;text-align:left">${esc(text)}</span>`); CH.lastUser=ub; CH.turns++;
+  CH.hist.push({r:"u",t:text});
+  const errs=analyze(text);
+  if(errs.length){ CH.mistakes+=errs.length; memAdd(errs); errs.forEach(x=>{ const d=document.createElement("div"); d.className="cfix"; d.innerHTML=`<b>تنبيه:</b> ${esc(x.ar)}`; ub.after(d); }); sfx("bad"); }
+  else sfx("ok");
+  S.log[dkey()]=true; save();
+  if(CH.sc.id!=="free" && (!CH.ai||CH.aiBad)){
+    const s=CH.sc.steps[CH.step], low=text.toLowerCase();
+    if(s && !s.kw.some(k=>low.includes(k)) && !errs.length){ const d=document.createElement("div"); d.className="cfix"; d.innerHTML=`<b>فكرة:</b> <span dir="ltr">${esc(s.h)}</span>`; ub.after(d); }
+    CH.step++;
+  } else if(CH.sc.id!=="free"){ CH.step++; if(CH.step>=CH.sc.steps.length+1){ endChat(); return; } }
+  await nextBot(false);
+}
+function endChat(){
+  const line=CH.sc.end||"Thanks for chatting!"; CH.hist.push({r:"b",t:line}); botBubble(line);
+  const top=memTop(2);
+  const d=bubble("b",`<b>انتهى الموقف</b><div class="muted small" style="margin:6px 0">${CH.turns} رد · ${CH.mistakes} تنبيه</div>${top.length?`<div class="small">أكثر أخطائك: ${top.map(t=>esc(t.ar)).join(" · ")}</div>`:""}<a class="btn" href="#/chat" style="margin-top:10px">موقف آخر</a>`);
+  $(".cbar").style.display="none"; sfx("win");
+}
+
+/* =====================================================================
    الاختبار
    ===================================================================== */
 function startQuiz(id){
@@ -1329,6 +1478,14 @@ function renderMe(){
     <div class="sec"><h2>المؤثرات الصوتية</h2></div>
     <label class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" id="sfxc" ${sfxOn()?"checked":""} style="width:22px;height:22px"><span>أصوات الإجابة الصحيحة والخاطئة</span></label>
 
+    <div class="sec"><h2>ذكاء اصطناعي للمحادثة (مجاني)</h2></div>
+    <div class="card">
+      <p class="note" style="margin-top:0">اختياري. للمحادثة الحرّة وردود أذكى. احصل على مفتاح مجاني من aistudio.google.com/apikey والصقه هنا. يُحفظ في هاتفك فقط. الخطة المجانية لها حدّ يومي، وقد تستخدم Google المحادثات لتحسين خدماتها، فلا تكتب معلومات شخصية.</p>
+      <input class="txt" id="gk" type="password" placeholder="مفتاح Gemini" autocomplete="off" value="${esc(gCfg().key||"")}">
+      <button class="btn ghost" id="gt" style="margin-top:8px">حفظ واختبار</button>
+      <div id="gst" class="muted small" style="margin-top:8px"></div>
+    </div>
+
     <div class="sec"><h2>صوت ElevenLabs</h2></div>
     <div class="card" id="elbox">
       <p class="note" style="margin-top:0">للحصول على صوت بشري: الصق مفتاح API الخاص بك. يُحفظ في هاتفك فقط ولا يُرسل لأي جهة غير ElevenLabs.</p>
@@ -1343,6 +1500,7 @@ function renderMe(){
   $("#rs").onclick=()=>{ if(confirm("هل تريد مسح كل تقدمك والبدء من جديد؟")){ S=fresh(); save(); location.hash="#/"; route(); } };
 
   $("#sfxc").onchange=e=>{ try{ localStorage.setItem("englishPath.sfx", e.target.checked?"1":"0"); }catch(x){} if(e.target.checked) sfx("ok"); };
+  $("#gt").onclick=async()=>{ const key=$("#gk").value.trim(), g=$("#gst"); if(!key){ gSave({}); g.textContent="تم حذف المفتاح."; return; } g.textContent="جاري الاختبار…"; gSave({key}); try{ const o=await aiCall({role:"a friendly partner"},[],true); g.textContent="يعمل ✓ — جرّب المحادثة الحرّة. رد تجريبي: "+o.reply; }catch(e){ g.textContent=gErrText(e); } };
   const st=$("#elst"), vbox=$("#elv"); let stop=false;
   const refreshSt=async()=>{ const n=await idbCount(); st.textContent=n?("أصوات محفوظة في هاتفك: "+n):""; };
   function drawVoices(list){
