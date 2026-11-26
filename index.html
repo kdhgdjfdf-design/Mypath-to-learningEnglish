@@ -775,6 +775,7 @@ function route(){
   else if(page==="review") startReview();
   else if(page==="speak") startSpeak();
   else if(page==="chat") startChat();
+  else if(page==="talk") startTalk();
   else if(page==="explore"){ nav="explore"; renderExplore(); }
   else if(page==="progress"){ nav="progress"; renderProgress(); }
   else if(page==="me"){ nav="me"; renderMe(); }
@@ -896,6 +897,7 @@ function renderHome(){
     <div class="card wod"><div><b>${esc(wod[0])}</b><span class="muted">${esc(wod[1])}</span></div><button class="spk" data-say="${esc(wod[0])}" aria-label="استمع">🔊</button></div>
     <div class="sec"><h2>المزيد</h2></div>
     <div class="soon-grid">
+      <a class="soon" href="#/talk" style="grid-column:1/-1;text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow);min-height:0"><div class="soonic">🎙️</div><h3>يومية التحدث · موضوع جديد كل يوم</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
       <a class="soon" href="#/chat" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">💬</div><h3>محادثة وتصحيح الأخطاء</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
       <a class="soon" href="#/speak" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
     </div>`;
@@ -1427,6 +1429,104 @@ function endChat(){
   const top=memTop(2);
   const d=bubble("b",`<b>انتهى الموقف</b><div class="muted small" style="margin:6px 0">${CH.turns} رد · ${CH.mistakes} تنبيه</div>${top.length?`<div class="small">أكثر أخطائك: ${top.map(t=>esc(t.ar)).join(" · ")}</div>`:""}<a class="btn" href="#/chat" style="margin-top:10px">موقف آخر</a>`);
   $(".cbar").style.display="none"; sfx("win");
+}
+
+/* =====================================================================
+   يومية التحدث: موضوع كل يوم، تتكلم بحرية، والتطبيق يحلّل ويتابع تقدمك
+   ===================================================================== */
+const TOPICS=[
+ {lv:0,en:"Introduce yourself",ar:"عرّف بنفسك",p:["What is your name?","Where are you from?","What do you do?","What do you like?"]},
+ {lv:0,en:"My family",ar:"عائلتي",p:["How many people are in your family?","What are their names?","What do they do?"]},
+ {lv:0,en:"My daily routine",ar:"روتيني اليومي",p:["What time do you wake up?","What do you do in the morning?","What do you do in the evening?"]},
+ {lv:0,en:"My house",ar:"بيتي",p:["Where do you live?","How many rooms are there?","What is your favorite room?"]},
+ {lv:0,en:"My favorite food",ar:"طعامي المفضل",p:["What do you like to eat?","Who cooks at home?","What do you not like?"]},
+ {lv:0,en:"My best friend",ar:"صديقي المقرّب",p:["What is his or her name?","What does he or she look like?","What do you do together?"]},
+ {lv:0,en:"The weather and my city",ar:"الطقس ومدينتي",p:["What is the weather like today?","What is your city like?","What do you like about it?"]},
+ {lv:1,en:"What I did yesterday",ar:"ماذا فعلت أمس",p:["Where did you go?","Who did you see?","What did you eat?"]},
+ {lv:1,en:"My plans for the weekend",ar:"خططي لنهاية الأسبوع",p:["What are you going to do?","Who will you meet?","Where will you go?"]},
+ {lv:1,en:"Shopping",ar:"التسوّق",p:["What do you usually buy?","Where do you shop?","How much do you spend?"]},
+ {lv:1,en:"My job or my studies",ar:"عملي أو دراستي",p:["What do you do?","What do you like about it?","What is difficult?"]},
+ {lv:1,en:"My hobbies",ar:"هواياتي",p:["What do you do in your free time?","Why do you like it?","How often do you do it?"]},
+ {lv:2,en:"A trip I remember",ar:"رحلة أتذكّرها",p:["Where did you go?","What did you see?","Would you go again? Why?"]},
+ {lv:2,en:"My experience with learning English",ar:"تجربتي مع تعلّم الإنجليزية",p:["Why do you learn English?","What is difficult for you?","What is your goal?"]},
+ {lv:2,en:"A problem I solved",ar:"مشكلة حللتها",p:["What was the problem?","What did you do?","What did you learn?"]},
+ {lv:2,en:"Your dream job",ar:"وظيفة أحلامك",p:["What is it?","Why do you want it?","What do you need to do to get it?"]},
+ {lv:3,en:"Technology: good or bad?",ar:"التكنولوجيا: جيدة أم سيئة؟",p:["What is your opinion?","Give one example.","What will happen in the future?"]},
+ {lv:3,en:"Living in a city or a village",ar:"العيش في المدينة أو القرية",p:["Which do you prefer?","What are the advantages?","What are the disadvantages?"]},
+ {lv:3,en:"Something you would change in the world",ar:"شيء تغيّره في العالم",p:["What would you change?","Why?","How can people do it?"]},
+ {lv:4,en:"Explain a difficult idea simply",ar:"اشرح فكرة صعبة ببساطة",p:["Choose any idea you know well.","Use an example.","Check that a beginner could understand."]}
+];
+const TALK_TARGET=[25,40,60,90,110];
+let TK=null;
+function talkLevelIdx(){ let k=0; LEVELS.forEach((l,i)=>{ if(levelUnlocked(i)) k=i; }); return Math.min(k,4); }
+function talkPool(){ const k=talkLevelIdx(); return TOPICS.filter(t=>t.lv<=k); }
+function talkToday(){ const pool=talkPool(), day=Math.floor(Date.now()/864e5); S.talkShift=S.talkShift||{}; const sh=(S.talkShift[dkey()]||0); return pool[(day+sh)%pool.length]; }
+function recordSpeech(onUpdate,onDone,maxSec){
+  const r=new SR(); r.lang="en-US"; r.continuous=true; r.interimResults=true;
+  let finals="", interim="", stopped=false, err=null; const t0=Date.now(); let timer=null, ended=false;
+  const fin=()=>{ if(ended) return; ended=true; clearInterval(timer); onDone((finals+" "+interim).trim(), (Date.now()-t0)/1000, err); };
+  r.onresult=e=>{ interim=""; for(let i=e.resultIndex;i<e.results.length;i++){ const tr=e.results[i][0].transcript; if(e.results[i].isFinal) finals+=tr+" "; else interim+=tr; } onUpdate((finals+interim).trim(),(Date.now()-t0)/1000); };
+  r.onerror=e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ err="not-allowed"; stopped=true; } };
+  r.onend=()=>{ if(!stopped && !ended){ try{ r.start(); return; }catch(x){} } fin(); };
+  const stop=()=>{ stopped=true; try{ r.stop(); }catch(e){} setTimeout(fin,1200); };
+  timer=setInterval(()=>{ const s=(Date.now()-t0)/1000; onUpdate((finals+interim).trim(),s); if(s>=maxSec) stop(); },500);
+  try{ r.start(); }catch(e){ clearInterval(timer); onDone("",0,"start"); return null; }
+  return {stop};
+}
+function startTalk(){
+  S.talk=S.talk||[];
+  if(!SR){ view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a><div class="card"><div class="note">متصفحك لا يدعم التعرّف على الصوت. جرّب Chrome على الجوال أو الكمبيوتر.</div></div>`; return; }
+  const t=talkToday(), tg=TALK_TARGET[talkLevelIdx()], hist=S.talk, last=hist.slice(-10);
+  const mx=Math.max(1,...last.map(x=>x.words)), total=Math.round(hist.reduce((a,x)=>a+x.sec,0)/60);
+  const doneToday=hist.some(x=>x.d===dkey());
+  view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a>
+    <h1>يومية التحدث</h1>
+    <div class="card"><div class="muted small">موضوع اليوم ${doneToday?"· ✓ أنجزته":""}</div>
+      <div class="q ltr" style="font-size:1.5rem;margin:10px 0 2px" dir="ltr">${esc(t.en)}</div>
+      <div class="muted">${esc(t.ar)}</div>
+      <div class="tip" style="margin-top:12px"><b>أفكار تساعدك:</b><div dir="ltr" style="text-align:left;margin-top:6px">${t.p.map(x=>"• "+esc(x)).join("<br>")}</div></div>
+      <p class="muted small">هدفك اليوم: ${tg} كلمة أو أكثر. تكلّم بحرية، ولا تتوقف لتصحّح نفسك، فالخطأ جزء من التعلّم.</p>
+      <button class="btn" id="tgo">🎤 ابدأ التحدث</button>
+      <button class="link" id="tsh">غيّر الموضوع</button></div>
+    ${hist.length?`<div class="sec"><h2>تقدّمك</h2></div>
+    <div class="card"><div class="muted small">${hist.length} جلسة · ${total} دقيقة تحدّث</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin:12px 0 4px">${last.map(x=>`<div style="flex:1;background:${x.words>=x.target?"var(--ok)":"var(--blue)"};height:${Math.max(6,x.words/mx*100)}%;border-radius:6px 6px 0 0" title="${x.words}"></div>`).join("")}</div>
+      <div class="muted small">عدد الكلمات في آخر ${last.length} جلسات (الأخضر = حققت الهدف)</div>
+      ${hist.length>=2?`<p style="margin:10px 0 0">من <b>${hist[0].words}</b> كلمة في أول جلسة إلى <b>${hist[hist.length-1].words}</b> في آخر جلسة.</p>`:""}</div>`:""}`;
+  $("#tsh").onclick=()=>{ S.talkShift[dkey()]=(S.talkShift[dkey()]||0)+1; save(); startTalk(); };
+  $("#tgo").onclick=()=>recordTalk(t,tg);
+}
+function recordTalk(t,tg){
+  view.innerHTML=`<div class="card center"><div class="muted small">${esc(t.en)}</div>
+    <div class="big" id="ttm" style="font-size:2.4rem;margin:10px 0">0:00</div>
+    <div class="muted small" id="tcount">0 / ${tg} كلمة</div><div class="bar" style="margin:8px 0 14px"><i id="tbar" style="width:0%"></i></div>
+    <div id="ttx" dir="ltr" style="text-align:left;min-height:90px;background:#f7f5ef;border-radius:14px;padding:12px;line-height:1.6;color:#444">...</div>
+    <button class="btn" id="tstop" style="margin-top:14px;background:var(--bad)">⏹ انتهيت</button></div>`;
+  const rec=recordSpeech((txt,sec)=>{ const w=txt.split(/\s+/).filter(Boolean).length; $("#ttm").textContent=Math.floor(sec/60)+":"+String(Math.floor(sec%60)).padStart(2,"0"); $("#tcount").textContent=w+" / "+tg+" كلمة"; $("#tbar").style.width=Math.min(100,w/tg*100)+"%"; if(txt) $("#ttx").textContent=txt; },
+    (txt,sec,err)=>finishTalk(t,tg,txt,sec,err), 120);
+  if(!rec){ finishTalk(t,tg,"",0,"start"); return; }
+  $("#tstop").onclick=()=>{ $("#tstop").disabled=true; rec.stop(); };
+}
+function finishTalk(t,tg,txt,sec,err){
+  const words=txt.split(/\s+/).filter(Boolean), n=words.length;
+  if(err==="not-allowed"||n<3){ view.innerHTML=`<div class="card"><div class="note">${err==="not-allowed"?"اسمح للمتصفح باستخدام المايكروفون ثم أعد المحاولة.":"ما سمعت كلامًا كافيًا. تأكد من المايك وتكلّم بصوت واضح."}</div><button class="btn" onclick="startTalk()">حاول مرة أخرى</button></div>`; return; }
+  const uniq=new Set(words.map(w=>w.toLowerCase().replace(/[^a-z']/g,"")).filter(Boolean)).size, wpm=Math.round(n/Math.max(sec,1)*60);
+  const errs=analyze(txt).filter(x=>x.id!=="low_i"&&x.id!=="arabic"); memAdd(errs);
+  S.talk.push({d:dkey(),topic:t.en,words:n,uniq,sec:Math.round(sec),wpm,target:tg,errs:errs.length}); S.log[dkey()]=true; save();
+  const hit=n>=tg; sfx(hit?"win":"ok");
+  view.innerHTML=`<div class="card"><div class="big center">${hit?"🎉":"💪"}</div><h1 class="center">${hit?"حققت هدفك!":"أحسنت، استمر"}</h1>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0">
+      <div class="card center" style="padding:12px"><b style="font-size:1.4rem">${n}</b><div class="muted small">كلمة</div></div>
+      <div class="card center" style="padding:12px"><b style="font-size:1.4rem">${uniq}</b><div class="muted small">كلمة مختلفة</div></div>
+      <div class="card center" style="padding:12px"><b style="font-size:1.4rem">${wpm}</b><div class="muted small">كلمة/دقيقة</div></div></div>
+    <div class="tip"><b>ما قلته:</b><div dir="ltr" style="text-align:left;margin-top:6px">${esc(txt)}</div></div>
+    ${errs.length?`<div class="tip" style="margin-top:10px"><b>أخطاء ممكن تحسينها:</b><br>${errs.map(x=>"• "+esc(x.ar)).join("<br>")}</div>`:`<p class="muted small">لم يجد المحلّل أخطاء من الأنواع التي يعرفها.</p>`}
+    <p class="muted small">${wpm<70?"سرعتك مناسبة للمرحلة الحالية. الهدف التدريجي ~100 كلمة/دقيقة.":"سرعة جيدة. ركّز الآن على تنويع الكلمات."}${n<tg?" جرّب غدًا أن تزيد كلمات أكثر.":""}</p>
+    <div id="tai"></div>
+    ${gCfg().key?`<button class="btn ghost" id="tfb">تحليل بالذكاء الاصطناعي</button>`:""}
+    <button class="btn" id="tag">🎤 جرّب مرة أخرى</button><a class="btn ghost" href="#/">الرئيسية</a></div>`;
+  $("#tag").onclick=()=>recordTalk(t,tg);
+  const fb=$("#tfb"); if(fb) fb.onclick=async()=>{ fb.disabled=true; fb.textContent="جاري التحليل…"; try{ const o=await aiCall({id:"coach"},[{r:"u",t:"This is a transcript of me speaking English (speech-to-text, no punctuation). Please give me: 1) a corrected version, 2) my 3 most important mistakes explained in Arabic, 3) one tip to sound more natural. Transcript: "+txt}],false); $("#tai").innerHTML=`<div class="tip" style="white-space:pre-wrap;margin-bottom:10px">${esc(o.reply)}</div>`; fb.remove(); }catch(e){ fb.disabled=false; fb.textContent="تحليل بالذكاء الاصطناعي"; toast(gErrText(e)); } };
 }
 
 /* =====================================================================
