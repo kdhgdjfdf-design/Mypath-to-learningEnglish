@@ -1182,6 +1182,32 @@ function exResult(){
 /* =====================================================================
    تدريب النطق (Web Speech API)
    ===================================================================== */
+/* ---- داخل تطبيق Android (Capacitor): المتصفح المدمج بلا تعرّف على الصوت، فنستخدم إضافة أصلية ---- */
+(function(){
+  try{
+    const cap=window.Capacitor; if(!cap||!cap.isNativePlatform||!cap.isNativePlatform()) return;
+    const P=cap.Plugins&&cap.Plugins.SpeechRecognition; if(!P) return;
+    window.__native=true;
+    class NativeSR{
+      constructor(){ this.lang="en-US"; this.continuous=false; this.interimResults=false; this.maxAlternatives=1; this._last=null; this._live=false; this._hs=[]; }
+      _emit(final){ if(!this._last||!this._last.length) return; const alts=this._last.map(t=>({transcript:t,confidence:1})); const res=[alts]; res[0].isFinal=final; res.item=i=>res[i]; try{ this.onresult&&this.onresult({resultIndex:0,results:res}); }catch(e){} }
+      async start(){
+        try{
+          const pm=await P.requestPermissions(); if(pm.speechRecognition!=="granted"){ this.onerror&&this.onerror({error:"not-allowed"}); this.onend&&this.onend(); return; }
+          this._live=true; this._last=null;
+          this._hs.push(await P.addListener("partialResults",d=>{ if(d&&d.matches&&d.matches.length){ this._last=d.matches; if(this.interimResults) this._emit(false); } }));
+          this._hs.push(await P.addListener("listeningState",d=>{ if(d&&d.status==="stopped") this._finish(); }));
+          const r=await P.start({language:this.lang,maxResults:3,partialResults:true,popup:false});
+          if(r&&r.matches&&r.matches.length) this._last=r.matches;
+        }catch(e){ this.onerror&&this.onerror({error:"error"}); this._finish(); }
+      }
+      stop(){ try{ P.stop(); }catch(e){} setTimeout(()=>this._finish(),400); }
+      abort(){ this.stop(); }
+      _finish(){ if(!this._live) return; this._live=false; this._hs.forEach(h=>{ try{ h.remove(); }catch(e){} }); this._hs=[]; this._emit(true); this.onend&&this.onend(); }
+    }
+    window.SpeechRecognition=NativeSR; window.webkitSpeechRecognition=NativeSR;
+  }catch(e){}
+})();
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const NUMW={"0":"zero","1":"one","2":"two","3":"three","4":"four","5":"five","6":"six","7":"seven","8":"eight","9":"nine","10":"ten","11":"eleven","12":"twelve","13":"thirteen","14":"fourteen","15":"fifteen","16":"sixteen","17":"seventeen","18":"eighteen","19":"nineteen","20":"twenty","30":"thirty","40":"forty","50":"fifty","60":"sixty"};
 const normW=t=>t.toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(Boolean).map(w=>NUMW[w]||w);

@@ -1,0 +1,6 @@
+{
+  "appId": "com.englishpath.app",
+  "appName": "رحلة الإنجليزية",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}
