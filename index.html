@@ -592,7 +592,7 @@ function pickVoice(){
   return vs.sort((a,b)=>score(b)-score(a))[0];
 }
 if("speechSynthesis" in window){ speechSynthesis.onvoiceschanged=()=>{ _voice=pickVoice(); }; _voice=pickVoice(); }
-function speakLocal(t){ if(!("speechSynthesis" in window)) return; try{ speechSynthesis.cancel(); if(!_voice) _voice=pickVoice(); const u=new SpeechSynthesisUtterance(t); u.lang=_voice?_voice.lang:"en-US"; if(_voice){ try{ u.voice=_voice; }catch(e){} } u.rate=.92; u.pitch=1; speechSynthesis.speak(u);}catch(e){} }
+function speakLocal(t){ return new Promise(res=>{ if(!("speechSynthesis" in window)) return res(); try{ speechSynthesis.cancel(); if(!_voice) _voice=pickVoice(); const u=new SpeechSynthesisUtterance(t); u.lang=_voice?_voice.lang:"en-US"; if(_voice){ try{ u.voice=_voice; }catch(e){} } u.rate=.92; u.pitch=1; u.onend=u.onerror=()=>res(); speechSynthesis.speak(u); setTimeout(res,Math.min(20000,1500+t.length*90)); }catch(e){ res(); } }); }
 
 
 /* ---- صوت بشري عبر خدمة TTS على الإنترنت، مع رجوع تلقائي لصوت الجهاز ---- */
@@ -648,7 +648,7 @@ async function speak(t){
       try{ for(const c of ttsChunks(u)){ if(tok!==_tok) return; await playChunk(ttsUrl(c)); } continue; }
       catch(e){ if(tok!==_tok) return; _netBad=Date.now(); }
     }
-    speakLocal(units.slice(i).join(" ")); return;
+    await speakLocal(units.slice(i).join(" ")); return;
   }
 }
 /* كل نصوص التطبيق الأساسية (كلمات + جمل + عبارات الأسبوع) */
@@ -776,6 +776,8 @@ function route(){
   else if(page==="speak") startSpeak();
   else if(page==="chat") startChat();
   else if(page==="talk") startTalk();
+  else if(page==="shadow") startShadow();
+  else if(page==="phrases") startPhrases();
   else if(page==="explore"){ nav="explore"; renderExplore(); }
   else if(page==="progress"){ nav="progress"; renderProgress(); }
   else if(page==="me"){ nav="me"; renderMe(); }
@@ -897,6 +899,8 @@ function renderHome(){
     <div class="card wod"><div><b>${esc(wod[0])}</b><span class="muted">${esc(wod[1])}</span></div><button class="spk" data-say="${esc(wod[0])}" aria-label="استمع">🔊</button></div>
     <div class="sec"><h2>المزيد</h2></div>
     <div class="soon-grid">
+      <a class="soon" href="#/shadow" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">🎧</div><h3>وضع الترديد (Shadowing)</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
+      <a class="soon" href="#/phrases" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">📖</div><h3>دليل العبارات</h3><span class="tag soon" style="background:var(--blue);color:#fff">افتح</span></a>
       <a class="soon" href="#/talk" style="grid-column:1/-1;text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow);min-height:0"><div class="soonic">🎙️</div><h3>يومية التحدث · موضوع جديد كل يوم</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
       <a class="soon" href="#/chat" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">💬</div><h3>محادثة وتصحيح الأخطاء</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
       <a class="soon" href="#/speak" style="text-decoration:none;color:inherit;background:#fff;box-shadow:var(--shadow)"><div class="soonic">🎙️</div><h3>تدريب النطق بالصوت</h3><span class="tag soon" style="background:var(--blue);color:#fff">ابدأ</span></a>
@@ -1527,6 +1531,89 @@ function finishTalk(t,tg,txt,sec,err){
     <button class="btn" id="tag">🎤 جرّب مرة أخرى</button><a class="btn ghost" href="#/">الرئيسية</a></div>`;
   $("#tag").onclick=()=>recordTalk(t,tg);
   const fb=$("#tfb"); if(fb) fb.onclick=async()=>{ fb.disabled=true; fb.textContent="جاري التحليل…"; try{ const o=await aiCall({id:"coach"},[{r:"u",t:"This is a transcript of me speaking English (speech-to-text, no punctuation). Please give me: 1) a corrected version, 2) my 3 most important mistakes explained in Arabic, 3) one tip to sound more natural. Transcript: "+txt}],false); $("#tai").innerHTML=`<div class="tip" style="white-space:pre-wrap;margin-bottom:10px">${esc(o.reply)}</div>`; fb.remove(); }catch(e){ fb.disabled=false; fb.textContent="تحليل بالذكاء الاصطناعي"; toast(gErrText(e)); } };
+}
+
+/* =====================================================================
+   وضع الترديد (Shadowing): تسمع الجملة ثم تعيدها فورًا بنفس الإيقاع
+   ===================================================================== */
+let SH=null;
+function startShadow(){
+  if(!SR){ view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a><div class="card"><div class="note">متصفحك لا يدعم التعرّف على الصوت. جرّب Chrome على الجوال أو الكمبيوتر.</div></div>`; return; }
+  SH={items:shuffle(speakPool()).slice(0,6),i:0,hide:false,run:0,res:[]};
+  drawShadow();
+}
+function drawShadow(){
+  if(SH.i>=SH.items.length){ shadowDone(); return; }
+  const it=SH.items[SH.i], my=++SH.run, n=SH.items.length;
+  view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a>
+    <div class="card"><div class="muted small">الترديد · ${SH.i+1} من ${n}</div><div class="bar"><i style="width:${SH.i/n*100}%"></i></div>
+      <div id="stx" class="q" dir="ltr" style="font-size:1.45rem;margin:16px 0 6px;text-align:left">${esc(it.en)}</div>
+      <div class="muted" style="margin-bottom:12px">${esc(it.ar)}</div>
+      <div id="ssts" class="note" style="font-weight:700">...</div>
+      <div id="sres" style="margin-top:12px"></div>
+      <label class="muted small" style="display:flex;gap:8px;align-items:center;margin-top:14px"><input type="checkbox" id="shd" ${SH.hide?"checked":""}> أخفِ النص أثناء الترديد (أصعب وأفضل)</label>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn ghost" id="sskip" style="margin:0">تخطَّ</button><button class="btn ghost" id="sstop" style="margin:0">إنهاء</button></div></div>`;
+  const sts=t=>{ if(SH.run===my&&$("#ssts")) $("#ssts").textContent=t; };
+  $("#shd").onchange=e=>{ SH.hide=e.target.checked; };
+  $("#sskip").onclick=()=>{ SH.run++; stopSpeech(); SH.i++; drawShadow(); };
+  $("#sstop").onclick=()=>{ SH.run++; stopSpeech(); shadowDone(); };
+  const attempt=async n=>{
+    if(SH.run!==my) return;
+    sts("1) استمع جيدًا..."); await speak(it.en); if(SH.run!==my) return;
+    await new Promise(z=>setTimeout(z,250)); if(SH.run!==my) return;
+    if(SH.hide&&$("#stx")) $("#stx").style.visibility="hidden";
+    sts("2) كرّر الآن!");
+    listenOnce(it.en,(err,sc)=>{
+      if(SH.run!==my) return; if($("#stx")) $("#stx").style.visibility="visible";
+      if(err){ sts(err==="not-allowed"?"اسمح للمتصفح باستخدام المايكروفون":"ما سمعت شيئًا"); $("#sres").innerHTML=`<button class="btn" id="srt">🔁 حاول مرة أخرى</button>`; $("#srt").onclick=()=>attempt(1); return; }
+      showSpeech($("#sres"),sc); SH.res[SH.i]=Math.max(SH.res[SH.i]||0,sc.pct); S.sp=S.sp||{}; const rec=S.sp[it.en]||{b:0,n:0}; rec.n++; rec.b=Math.max(rec.b,sc.pct); S.sp[it.en]=rec; S.log[dkey()]=true; save();
+      if(sc.pct>=85) sfx("ok"); else if(sc.pct<50) sfx("bad");
+      if(sc.pct<60&&n<2){ sts("مرة ثانية، أبطأ وأوضح"); setTimeout(()=>attempt(n+1),2200); }
+      else { sts(sc.pct>=85?"ممتاز! ننتقل للجملة التالية":"جيد، التالية"); setTimeout(()=>{ if(SH.run===my){ SH.i++; drawShadow(); } },2400); }
+    });
+  };
+  attempt(1);
+}
+function shadowDone(){
+  const vals=SH.items.map((_,i)=>SH.res[i]||0), done=SH.res.filter(v=>v!==undefined).length, avg=done?Math.round(SH.res.reduce((a,b)=>a+(b||0),0)/done):0;
+  if(avg>=75) setTimeout(()=>sfx("win"),300);
+  view.innerHTML=`<div class="card"><div class="big center">${avg>=75?"🎉":"💪"}</div><h1 class="center">${avg}%</h1><p class="center">متوسط تطابق ترديدك في ${done} جمل.</p>
+    <button class="btn" id="sa">🔁 جلسة جديدة</button><a class="btn ghost" href="#/">الرئيسية</a></div>`;
+  $("#sa").onclick=startShadow;
+}
+
+/* =====================================================================
+   دليل العبارات: عبارات جاهزة حسب الموقف، بصوت، مع بحث ونجمة للمفضلة
+   ===================================================================== */
+const PHRASES=[
+ {c:"أساسيات ومجاملات",l:[["Excuse me.","عفوًا (لجذب الانتباه)"],["I'm sorry.","أنا آسف"],["Thank you very much.","شكرًا جزيلًا"],["You're welcome.","على الرحب والسعة"],["No problem.","لا مشكلة"],["Nice to meet you.","تشرفت بمعرفتك"],["How are you doing?","كيف حالك؟"],["See you later.","أراك لاحقًا"]]},
+ {c:"لم أفهم",l:[["Sorry, I didn't catch that.","آسف، لم أسمع ما قلت"],["Could you repeat that, please?","هل يمكنك أن تعيد ذلك من فضلك؟"],["Could you speak more slowly?","هل يمكنك التحدث ببطء أكثر؟"],["What does that mean?","ماذا يعني ذلك؟"],["How do you say this in English?","كيف أقول هذا بالإنجليزية؟"],["I don't understand.","لا أفهم"],["Can you explain that again?","هل يمكنك شرح ذلك مرة أخرى؟"],["My English isn't perfect yet.","إنجليزيتي ليست مثالية بعد"]]},
+ {c:"عبارات تملأ الصمت",l:[["Let me think.","دعني أفكر"],["Well, I think that...","حسنًا، أعتقد أن..."],["How can I put it?","كيف أقولها؟"],["That's a good question.","هذا سؤال جيد"],["What I mean is...","ما أقصده هو..."],["To be honest,...","بصراحة،..."],["As far as I know,...","على حد علمي،..."],["Just a moment, please.","لحظة من فضلك"]]},
+ {c:"التعارف والحديث القصير",l:[["Where are you from?","من أين أنت؟"],["What do you do for a living?","ماذا تعمل؟"],["How long have you lived here?","منذ متى تعيش هنا؟"],["Do you have any plans for the weekend?","هل عندك خطط لنهاية الأسبوع؟"],["That sounds great!","يبدو رائعًا!"],["Really? That's interesting.","حقًا؟ هذا مثير للاهتمام"],["I'd love to, but I'm busy.","أحب ذلك، لكنني مشغول"],["Let's keep in touch.","لنبقَ على تواصل"]]},
+ {c:"المطعم",l:[["A table for two, please.","طاولة لشخصين من فضلك"],["Can I see the menu?","هل أستطيع رؤية القائمة؟"],["I'd like to order, please.","أود أن أطلب من فضلك"],["What do you recommend?","ماذا تنصح؟"],["I'm allergic to nuts.","عندي حساسية من المكسرات"],["Could we have the bill, please?","هل نستطيع الحصول على الحساب؟"],["Is service included?","هل الخدمة مشمولة؟"],["Could I get that to go?","هل يمكنني أخذه معي؟"]]},
+ {c:"التسوّق",l:[["How much is this?","بكم هذا؟"],["Do you have this in a bigger size?","هل عندكم هذا بمقاس أكبر؟"],["Can I try it on?","هل أستطيع تجربته؟"],["It's too expensive.","إنه غالٍ جدًا"],["Do you accept credit cards?","هل تقبلون بطاقات الائتمان؟"],["I'm just looking, thanks.","أنظر فقط، شكرًا"],["Can I get a discount?","هل يمكنني الحصول على خصم؟"],["I'll take it.","سآخذه"]]},
+ {c:"الطريق والمواصلات",l:[["Where is the nearest station?","أين أقرب محطة؟"],["How do I get to the airport?","كيف أصل إلى المطار؟"],["Is it far from here?","هل هو بعيد من هنا؟"],["Which bus goes to the city center?","أي حافلة تذهب إلى وسط المدينة؟"],["Could you show me on the map?","هل يمكنك أن تريني على الخريطة؟"],["I think I'm lost.","أظنني تائهًا"],["How long does it take?","كم يستغرق؟"],["Please stop here.","توقف هنا من فضلك"]]},
+ {c:"المطار والفندق",l:[["I'd like to check in.","أود تسجيل الوصول"],["Where is gate twelve?","أين البوابة اثنا عشر؟"],["My flight has been delayed.","تأخرت رحلتي"],["I have a reservation under the name...","لدي حجز باسم..."],["What time is check-out?","متى موعد المغادرة؟"],["The air conditioning doesn't work.","المكيّف لا يعمل"],["Could I have a late check-out?","هل يمكنني المغادرة متأخرًا؟"],["Could you call me a taxi?","هل يمكنك أن تطلب لي سيارة أجرة؟"]]},
+ {c:"الصحة والطوارئ",l:[["I need a doctor.","أحتاج طبيبًا"],["I don't feel well.","لا أشعر أنني بخير"],["I have a headache.","عندي صداع"],["Where is the nearest pharmacy?","أين أقرب صيدلية؟"],["Please call an ambulance.","اتصل بالإسعاف من فضلك"],["I lost my passport.","أضعت جواز سفري"],["Can you help me, please?","هل يمكنك مساعدتي من فضلك؟"],["It's an emergency!","إنها حالة طارئة!"]]},
+ {c:"العمل والاجتماعات",l:[["Could we schedule a meeting?","هل يمكننا تحديد اجتماع؟"],["I'll send you the report by Friday.","سأرسل لك التقرير قبل الجمعة"],["Let me check and get back to you.","دعني أتحقق وأعود إليك"],["I'd like to share my opinion.","أود مشاركة رأيي"],["I agree with you on that.","أتفق معك في ذلك"],["I see it differently.","أرى الأمر بشكل مختلف"],["Could you give me more details?","هل يمكنك إعطائي مزيدًا من التفاصيل؟"],["Thank you for your time.","شكرًا على وقتك"]]}
+];
+function startPhrases(){
+  S.fav=S.fav||{}; let cat=-1, q="";
+  const draw=()=>{
+    const all=[]; PHRASES.forEach((g,gi)=>g.l.forEach(p=>all.push({g:gi,en:p[0],ar:p[1]})));
+    let list=all; if(q){ const k=q.toLowerCase(); list=all.filter(x=>x.en.toLowerCase().includes(k)||x.ar.includes(q)); } else if(cat===-2) list=all.filter(x=>S.fav[x.en]); else if(cat>=0) list=all.filter(x=>x.g===cat);
+    $("#plist").innerHTML=list.length?list.map(x=>`<div class="card" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;padding:12px"><button class="spk" data-say="${esc(x.en)}" aria-label="استمع">🔊</button><div style="flex:1"><div dir="ltr" style="text-align:left;font-weight:700">${esc(x.en)}</div><div class="muted small">${esc(x.ar)}</div></div><button class="link" data-fav="${esc(x.en)}" aria-label="مفضلة" style="text-decoration:none;font-size:1.5rem;color:${S.fav[x.en]?"#f5a623":"#c9c5b8"}">★</button></div>`).join(""):`<p class="muted center">لا نتائج.</p>`;
+    $("#plist").querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say));
+    $("#plist").querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{ const k=b.dataset.fav; if(S.fav[k]) delete S.fav[k]; else S.fav[k]=1; save(); draw(); });
+    $("#pcats").querySelectorAll("button").forEach(b=>b.className="chip2"+(String(cat)===b.dataset.c&&!q?" on":""));
+  };
+  view.innerHTML=`<a class="back" href="#/">→ الرئيسية</a><h1>دليل العبارات</h1>
+    <input class="txt" id="pq" placeholder="ابحث بالعربية أو الإنجليزية" style="margin-bottom:10px">
+    <div id="pcats" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px"><button data-c="-1">الكل</button><button data-c="-2">★ المفضلة</button>${PHRASES.map((g,i)=>`<button data-c="${i}" style="white-space:nowrap">${esc(g.c)}</button>`).join("")}</div>
+    <div id="plist"></div>`;
+  $("#pq").oninput=e=>{ q=e.target.value.trim(); draw(); };
+  $("#pcats").querySelectorAll("button").forEach(b=>b.onclick=()=>{ cat=+b.dataset.c; q=""; $("#pq").value=""; draw(); });
+  draw();
 }
 
 /* =====================================================================
